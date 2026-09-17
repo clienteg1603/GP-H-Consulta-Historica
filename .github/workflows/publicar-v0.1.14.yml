@@ -40,3 +40,8 @@ jobs:
               --notes "Primeira versão pública do GP-H Consulta Histórica para Windows. Consulta e análise histórica de resultados do Rio de Janeiro. Gratuito, não exige Python e não abre janela de console." \
               --latest
           fi
+
+      - name: Confirmar publicação
+        run: gh release view v0.1.14
+        env:
+          GH_TOKEN: ${{ github.token }}
