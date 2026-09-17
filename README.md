@@ -2,6 +2,8 @@
 
 Aplicativo gratuito para **consulta, pesquisa, análise e estudo histórico dos resultados do Jogo do Bicho do Rio de Janeiro**, desenvolvido para Windows.
 
+O GP-H Consulta Histórica reúne **resultados históricos, estatísticas, atrasos, rankings, bichos, grupos, dezenas, centenas e milhares** em uma interface própria para consulta no Windows.
+
 > **Escopo dos dados:** os resultados pesquisados e exibidos pelo programa são referentes ao **Rio de Janeiro**. O histórico não deve ser tratado automaticamente como válido para outras praças, estados ou bancas.
 
 ## Download
@@ -22,44 +24,49 @@ O pacote já inclui o executável. **Não é necessário instalar Python.**
 
 Na primeira vez que o programa for aberto, ele irá **criar automaticamente sua base de dados e iniciar a primeira sincronização do histórico**.
 
-Essa primeira sincronização irá consultar os resultados do **Rio de Janeiro desde 02/01/2026 até o último resultado disponível no momento da sincronização**.
+Essa primeira sincronização consulta os resultados do **Rio de Janeiro desde 02/01/2026 até o último resultado disponível no momento da sincronização**.
 
 Durante o processo, o programa mostra o andamento da carga. Caso a conexão seja interrompida, os dados já salvos são mantidos e a sincronização poderá continuar posteriormente.
 
 Depois da primeira carga, as próximas sincronizações passam a buscar apenas os resultados novos ou necessários para manter a base atualizada.
 
-## Recursos
+## O que o programa oferece
 
-- consulta do histórico de resultados;
-- pesquisa por bicho, grupo, dezena, centena e milhar;
+- consulta organizada do histórico de resultados;
+- pesquisa por **bicho, grupo, dezena, centena e milhar**;
 - filtros por período, sorteio e prêmio;
-- consulta dos **Jogos do Dia**;
-- indicadores de atraso;
-- acompanhamento de **Cabeça 1º**;
+- visualização dos **Jogos do Dia**, com as extrações separadas por horário;
+- navegação por dia anterior e próximo, botão **Hoje** e calendário;
+- atualização dos resultados pela própria tela;
+- acompanhamento de atraso de **Bicho 1º–5º**;
+- acompanhamento de **Cabeça 1º**, que considera especificamente a última aparição do animal no 1º prêmio;
+- acompanhamento de atrasos de **Centena** e **Dezena**;
 - estatísticas e rankings históricos;
-- base de dados armazenada localmente no computador;
-- atualização dos resultados pela internet;
-- interface gráfica para Windows, sem janela de console.
+- interface gráfica própria para Windows, sem janela de console.
 
-## Como usar
+## Como instalar
 
 1. Baixe o arquivo ZIP pelo botão acima.
 2. Extraia o conteúdo para uma pasta de sua preferência.
-3. Execute `GP-H Consulta Historica.exe`.
+3. Abra o executável `GP-H Consulta Historica.exe`.
+
+O programa é portátil e não exige instalação do Python.
 
 É necessária conexão com a internet para realizar a primeira sincronização e buscar novas atualizações.
 
-## Importante
+## Sobre os resultados
 
-Os dados utilizados pelo programa são referentes aos **resultados do Rio de Janeiro**.
+O GP-H Consulta Histórica foi desenvolvido para trabalhar com resultados do **Jogo do Bicho do Rio de Janeiro**.
 
-Resultados de outras localidades, estados, praças ou bancas podem ser diferentes e **não fazem parte da base utilizada pelo GP-H Consulta Histórica**.
+Resultados de outras localidades, estados, praças ou bancas podem ser diferentes e não fazem parte da base utilizada pelo programa.
 
-Resultados podem sofrer correções, atrasos de publicação ou diferenças conforme a fonte consultada. Informações muito recentes devem ser conferidas quando necessário.
+Resultados podem sofrer correções, atrasos de publicação ou diferenças conforme a fonte consultada. Por isso, informações muito recentes devem ser conferidas quando necessário.
 
-Resultados, frequências, atrasos, rankings e demais estatísticas históricas **não garantem resultados futuros**.
+## Uso responsável
 
-O programa é disponibilizado gratuitamente para **consulta, análise e estudo histórico**.
+O programa é uma ferramenta de **consulta, organização, análise e estudo histórico**. Dados passados, frequências, atrasos, rankings e demais estatísticas não garantem resultados futuros.
+
+O usuário é responsável pelo uso que fizer das informações apresentadas e por observar a legislação aplicável em sua localidade.
 
 ## Gratuito, mas não open source
 
@@ -67,18 +74,17 @@ O **GP-H Consulta Histórica** é disponibilizado gratuitamente para uso pessoal
 
 Consulte os [Termos de Uso](TERMOS_DE_USO.md) para as condições de distribuição e utilização.
 
-## Versão atual
+## Versão
 
 ### v0.1.15
 
 - cria automaticamente a base local na primeira utilização;
-- inicia a primeira sincronização do histórico sem configuração manual;
-- consulta os resultados do Rio de Janeiro desde **02/01/2026** até o último resultado disponível;
-- mantém o progresso caso a sincronização seja interrompida;
-- depois da primeira carga, realiza atualizações incrementais;
-- mantém Jogos do Dia, pesquisas, filtros, atrasos, estatísticas e rankings;
+- faz a primeira sincronização do histórico do Rio de Janeiro desde **02/01/2026**;
+- mantém o progresso salvo caso a sincronização seja interrompida;
+- depois da primeira carga, faz atualizações incrementais;
+- mantém Jogos do Dia, calendário, navegação entre datas, estatísticas e indicadores de atraso;
 - executável Windows sem necessidade de Python e sem abertura de console.
 
 ---
 
-**GP-H Consulta Histórica** — consulta histórica de resultados do Rio de Janeiro para Windows.
+**GP-H Consulta Histórica** — consulta, pesquisa e análise histórica dos resultados do Jogo do Bicho do Rio de Janeiro para Windows.
