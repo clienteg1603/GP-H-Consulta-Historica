@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://clienteg1603.github.io/GP-H-Consulta-Historica/sitemap.xml
