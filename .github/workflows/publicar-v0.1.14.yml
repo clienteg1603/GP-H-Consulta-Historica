@@ -1,0 +1,42 @@
+name: Publicar GP-H Consulta v0.1.14
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publicar-v0.1.14.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Baixar pacote oficial v0.1.14
+        run: |
+          curl -L --fail --retry 3 \
+            "https://github.com/clienteg1603/GP-H-Central-Historica/releases/download/consulta-v0.1.14/GP-H_Consulta_Historica_v0.1.14_Windows.zip" \
+            -o "GP-H_Consulta_Historica_v0.1.14_Windows.zip"
+
+      - name: Verificar integridade do pacote
+        run: |
+          echo "35e13022e5a5cea1c566f7cb72f4bbc0702b12d5e95ad4402ee8bda8b6983557  GP-H_Consulta_Historica_v0.1.14_Windows.zip" | sha256sum -c -
+
+      - name: Publicar Release v0.1.14
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v0.1.14 >/dev/null 2>&1; then
+            gh release upload v0.1.14 "GP-H_Consulta_Historica_v0.1.14_Windows.zip" --clobber
+          else
+            gh release create v0.1.14 \
+              "GP-H_Consulta_Historica_v0.1.14_Windows.zip" \
+              --title "GP-H Consulta Histórica v0.1.14" \
+              --notes "Primeira versão pública do GP-H Consulta Histórica para Windows. Consulta e análise histórica de resultados do Rio de Janeiro. Gratuito, não exige Python e não abre janela de console." \
+              --latest
+          fi
