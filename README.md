@@ -10,9 +10,13 @@ Aplicativo gratuito para **consulta e análise histórica de resultados do Jogo 
 **Sistema:** Windows 10/11  
 **Preço:** gratuito
 
-➡️ **[Baixar GP-H Consulta Histórica v0.1.14 para Windows](https://github.com/clienteg1603/GP-H-Central-Historica/releases/download/consulta-v0.1.14/GP-H_Consulta_Historica_v0.1.14_Windows.zip)**
+➡️ **[Baixar GP-H Consulta Histórica v0.1.14 para Windows](https://github.com/clienteg1603/GP-H-Consulta-Historica/releases/download/v0.1.14/GP-H_Consulta_Historica_v0.1.14_Windows.zip)**
+
+Também é possível abrir a [página oficial do Release v0.1.14](https://github.com/clienteg1603/GP-H-Consulta-Historica/releases/tag/v0.1.14).
 
 O pacote já inclui o executável. **Não é necessário instalar Python.**
+
+**SHA-256 do ZIP oficial:** `35e13022e5a5cea1c566f7cb72f4bbc0702b12d5e95ad4402ee8bda8b6983557`
 
 ## O que o programa oferece
 
