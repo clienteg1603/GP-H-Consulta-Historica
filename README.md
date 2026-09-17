@@ -18,6 +18,33 @@ O pacote já inclui o executável. **Não é necessário instalar Python.**
 
 **SHA-256 do ZIP oficial:** `35e13022e5a5cea1c566f7cb72f4bbc0702b12d5e95ad4402ee8bda8b6983557`
 
+## Primeira execução e criação do histórico
+
+Em um computador onde o GP-H nunca foi usado, o arquivo local `gph_historico.db` ainda não existe.
+
+A distribuição pública independente está sendo preparada para que a primeira execução faça automaticamente a carga inicial do histórico do **Rio de Janeiro**, criando o banco local em:
+
+`%LOCALAPPDATA%\GP-H_Central_Historica\dados\gph_historico.db`
+
+A carga histórica inicial deve funcionar assim:
+
+1. detectar que o banco ainda não existe ou está vazio;
+2. criar o banco local do usuário;
+3. consultar os resultados do **Rio de Janeiro a partir de 02/01/2026**;
+4. continuar a consulta **até a data atual disponível no momento da sincronização**;
+5. salvar o progresso localmente;
+6. nas próximas execuções, buscar apenas resultados novos ou correções necessárias, em vez de baixar todo o ano novamente.
+
+Se algum resultado do dia ainda não estiver publicado pela fonte consultada, o programa poderá terminar a sincronização no **último resultado disponível** e completar o restante em uma atualização posterior.
+
+> **Importante sobre a v0.1.14:** esta versão foi criada originalmente em um ambiente no qual o banco histórico já existia. A carga histórica automática completa para um PC totalmente novo será tratada como requisito da próxima revisão pública antes de recomendarmos a distribuição para novos usuários.
+
+## Período da consulta
+
+Para um usuário novo, o histórico público planejado começa em **02/01/2026** e vai até **o resultado mais recente disponível** no dia em que a atualização for feita.
+
+Exemplo: se a primeira execução ocorrer em 17/09/2026 e todos os resultados desse dia já estiverem disponíveis, a base poderá abranger **02/01/2026 → 17/09/2026**. Se o último sorteio do dia ainda não estiver disponível, ele será incorporado quando a atualização for executada novamente.
+
 ## O que o programa oferece
 
 - consulta organizada do histórico de resultados;
