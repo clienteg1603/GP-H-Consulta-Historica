@@ -21,21 +21,19 @@
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Windows 10, Windows 11",
     "softwareVersion": "0.1.15",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "BRL"
-    },
+    "offers": {"@type": "Offer","price": "0","priceCurrency": "BRL"},
     "description": "Aplicativo gratuito para consulta, pesquisa, análise e estudo histórico dos resultados do Jogo do Bicho do Rio de Janeiro."
   }
   </script>
   <style>
-    :root{color-scheme:dark;--bg:#07101d;--card:#0d1726;--card2:#111d2e;--text:#eef4ff;--muted:#9fb0c5;--accent:#3b82f6;--accent2:#60a5fa;--border:#1c2b41;--ok:#22c55e;--shadow:0 18px 50px rgba(0,0,0,.28)}
+    :root{color-scheme:dark;--bg:#07101d;--card:#0d1726;--card2:#111d2e;--text:#eef4ff;--muted:#9fb0c5;--accent:#3b82f6;--accent2:#60a5fa;--border:#1c2b41;--ok:#22c55e;--danger:#f87171;--shadow:0 18px 50px rgba(0,0,0,.28)}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top,#10223d 0,#07101d 42%,#050b14 100%);color:var(--text);line-height:1.6}
     a{color:inherit}.wrap{width:min(1080px,calc(100% - 32px));margin:auto}.top{display:flex;align-items:center;justify-content:space-between;padding:22px 0}.brand{font-weight:800;letter-spacing:.3px}.pill{font-size:.82rem;color:#c9dbf7;border:1px solid var(--border);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.03)}
-    .hero{padding:70px 0 54px}.hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:34px;align-items:center}.eyebrow{display:inline-flex;gap:8px;align-items:center;color:#bcd3f8;font-weight:700;font-size:.9rem;margin-bottom:14px}.dot{width:8px;height:8px;border-radius:999px;background:var(--ok);box-shadow:0 0 18px rgba(34,197,94,.8)}h1{font-size:clamp(2.35rem,6vw,4.8rem);line-height:1.02;margin:0 0 20px;letter-spacing:-2.5px}.lead{font-size:1.14rem;color:var(--muted);max-width:760px;margin:0 0 28px}.actions{display:flex;gap:12px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-weight:800;padding:13px 18px;border-radius:12px;border:1px solid var(--border);transition:.2s transform,.2s border-color}.btn:hover{transform:translateY(-2px);border-color:#315079}.primary{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border:none;box-shadow:0 12px 30px rgba(59,130,246,.28)}.secondary{background:#0b1523}.sidecard{background:linear-gradient(180deg,rgba(17,29,46,.95),rgba(10,19,31,.95));border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow)}.sidecard strong{font-size:1.05rem}.meta{display:grid;gap:13px;margin-top:18px}.meta-row{display:flex;justify-content:space-between;gap:20px;padding-bottom:11px;border-bottom:1px solid var(--border);color:var(--muted)}.meta-row:last-child{border-bottom:0;padding-bottom:0}.meta-row span:last-child{color:var(--text);font-weight:700;text-align:right}
-    section{padding:34px 0}.section-title{font-size:1.8rem;margin:0 0 8px}.section-sub{color:var(--muted);margin:0 0 22px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:rgba(13,23,38,.88);border:1px solid var(--border);border-radius:16px;padding:19px}.card h3{margin:0 0 8px;font-size:1.05rem}.card p{margin:0;color:var(--muted)}.steps{counter-reset:step;display:grid;gap:13px}.step{display:flex;gap:15px;align-items:flex-start;background:rgba(13,23,38,.72);border:1px solid var(--border);border-radius:14px;padding:17px}.step:before{counter-increment:step;content:counter(step);display:grid;place-items:center;min-width:32px;height:32px;border-radius:10px;background:#162a46;color:#cfe0fb;font-weight:900}.step p{margin:2px 0;color:var(--muted)}.notice{margin:28px 0 0;padding:18px;border:1px solid #2b3e59;border-radius:14px;background:#0b1523;color:#c4d3e7}.download{margin:38px 0 12px;padding:28px;border-radius:20px;background:linear-gradient(135deg,#102545,#0c1728);border:1px solid #244261;text-align:center}.download h2{margin:0 0 8px}.download p{margin:0 0 18px;color:var(--muted)}footer{padding:42px 0 34px;color:#7890ad;font-size:.9rem;text-align:center}
-    @media(max-width:820px){.hero-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.top{align-items:flex-start;gap:12px}.hero{padding-top:42px}h1{letter-spacing:-1.5px}}
+    .hero{padding:70px 0 54px}.hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:34px;align-items:center}.eyebrow{display:inline-flex;gap:8px;align-items:center;color:#bcd3f8;font-weight:700;font-size:.9rem;margin-bottom:14px}.dot{width:8px;height:8px;border-radius:999px;background:var(--ok);box-shadow:0 0 18px rgba(34,197,94,.8)}h1{font-size:clamp(2.35rem,6vw,4.8rem);line-height:1.02;margin:0 0 20px;letter-spacing:-2.5px}.lead{font-size:1.14rem;color:var(--muted);max-width:760px;margin:0 0 28px}.actions{display:flex;gap:12px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-weight:800;padding:13px 18px;border-radius:12px;border:1px solid var(--border);transition:.2s transform,.2s border-color;cursor:pointer}.btn:hover{transform:translateY(-2px);border-color:#315079}.primary{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border:none;box-shadow:0 12px 30px rgba(59,130,246,.28)}.secondary{background:#0b1523}.sidecard{background:linear-gradient(180deg,rgba(17,29,46,.95),rgba(10,19,31,.95));border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow)}.sidecard strong{font-size:1.05rem}.meta{display:grid;gap:13px;margin-top:18px}.meta-row{display:flex;justify-content:space-between;gap:20px;padding-bottom:11px;border-bottom:1px solid var(--border);color:var(--muted)}.meta-row:last-child{border-bottom:0;padding-bottom:0}.meta-row span:last-child{color:var(--text);font-weight:700;text-align:right}
+    section{padding:34px 0}.section-title{font-size:1.8rem;margin:0 0 8px}.section-sub{color:var(--muted);margin:0 0 22px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:rgba(13,23,38,.88);border:1px solid var(--border);border-radius:16px;padding:19px}.card h3{margin:0 0 8px;font-size:1.05rem}.card p{margin:0;color:var(--muted)}.steps{counter-reset:step;display:grid;gap:13px}.step{display:flex;gap:15px;align-items:flex-start;background:rgba(13,23,38,.72);border:1px solid var(--border);border-radius:14px;padding:17px}.step:before{counter-increment:step;content:counter(step);display:grid;place-items:center;min-width:32px;height:32px;border-radius:10px;background:#162a46;color:#cfe0fb;font-weight:900}.step p{margin:2px 0;color:var(--muted)}.notice{margin:28px 0 0;padding:18px;border:1px solid #2b3e59;border-radius:14px;background:#0b1523;color:#c4d3e7}.download{margin:38px 0 12px;padding:28px;border-radius:20px;background:linear-gradient(135deg,#102545,#0c1728);border:1px solid #244261;text-align:center}.download h2{margin:0 0 8px}.download p{margin:0 0 18px;color:var(--muted)}
+    .comments-box{background:rgba(13,23,38,.88);border:1px solid var(--border);border-radius:20px;padding:22px}.comments-form{display:grid;gap:12px}.comments-form label{font-weight:700;font-size:.92rem}.comments-form input,.comments-form textarea{width:100%;border:1px solid #2a3d59;background:#08121f;color:var(--text);border-radius:12px;padding:12px 13px;font:inherit;outline:none}.comments-form textarea{min-height:120px;resize:vertical}.comments-form input:focus,.comments-form textarea:focus{border-color:#4f86cf;box-shadow:0 0 0 3px rgba(59,130,246,.12)}.hp{position:absolute!important;left:-9999px!important;opacity:0!important;pointer-events:none!important}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-status{min-height:24px;color:var(--muted);font-size:.92rem}.form-status.ok{color:#86efac}.form-status.error{color:#fca5a5}.comments-list{display:grid;gap:12px;margin-top:20px}.comment{border:1px solid var(--border);border-radius:14px;background:#091421;padding:15px}.comment-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:7px}.comment-name{font-weight:800}.comment-date{color:#7890ad;font-size:.84rem}.comment-body{white-space:pre-wrap;color:#c7d5e7}.empty{color:var(--muted);padding:14px 0}.comments-disabled{padding:16px;border:1px dashed #38506f;border-radius:12px;color:#b8c8dc;background:#0a1421}
+    footer{padding:42px 0 34px;color:#7890ad;font-size:.9rem;text-align:center}
+    @media(max-width:820px){.hero-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.top{align-items:flex-start;gap:12px}.hero{padding-top:42px}h1{letter-spacing:-1.5px}}
   </style>
 </head>
 <body>
@@ -54,7 +52,7 @@
             <p class="lead">Aplicativo gratuito para Windows destinado à consulta, pesquisa, análise e estudo histórico dos resultados do Jogo do Bicho do Rio de Janeiro.</p>
             <div class="actions">
               <a class="btn primary" href="https://github.com/clienteg1603/GP-H-Consulta-Historica/releases/download/v0.1.15/GP-H_Consulta_Historica_v0.1.15_Windows.zip">Baixar para Windows</a>
-              <a class="btn secondary" href="https://github.com/clienteg1603/GP-H-Consulta-Historica/releases/tag/v0.1.15">Ver versão no GitHub</a>
+              <a class="btn secondary" href="#comentarios">Comentários e sugestões</a>
             </div>
           </div>
           <aside class="sidecard">
@@ -95,6 +93,25 @@
         <div class="notice"><strong>Importante:</strong> os resultados utilizados pelo programa são referentes ao Rio de Janeiro. Resultados de outras localidades, estados, praças ou bancas podem ser diferentes. Estatísticas e resultados históricos não garantem resultados futuros.</div>
       </section>
 
+      <section id="comentarios">
+        <h2 class="section-title">Comentários, dúvidas e sugestões</h2>
+        <p class="section-sub">Envie uma mensagem diretamente pelo site. Comentários publicados também aparecem abaixo.</p>
+        <div class="comments-box">
+          <div id="comments-disabled" class="comments-disabled">A área de comentários está sendo conectada ao serviço de mensagens. O formulário será liberado assim que a configuração for concluída.</div>
+          <form id="comment-form" class="comments-form" hidden>
+            <div class="form-row">
+              <div><label for="comment-name">Nome</label><input id="comment-name" name="name" maxlength="60" required autocomplete="name" placeholder="Seu nome"></div>
+              <div><label for="comment-email">E-mail (opcional)</label><input id="comment-email" name="email" type="email" maxlength="120" autocomplete="email" placeholder="Para retorno, se desejar"></div>
+            </div>
+            <div class="hp" aria-hidden="true"><label for="comment-site">Site</label><input id="comment-site" name="website" tabindex="-1" autocomplete="off"></div>
+            <div><label for="comment-message">Mensagem</label><textarea id="comment-message" name="message" maxlength="1500" required placeholder="Escreva sua dúvida, sugestão ou comentário"></textarea></div>
+            <div><button class="btn primary" type="submit">Enviar comentário</button></div>
+            <div id="form-status" class="form-status" aria-live="polite"></div>
+          </form>
+          <div id="comments-list" class="comments-list"></div>
+        </div>
+      </section>
+
       <section class="download">
         <h2>Baixe a versão atual</h2>
         <p>GP-H Consulta Histórica v0.1.15 para Windows 10 e Windows 11.</p>
@@ -102,9 +119,55 @@
       </section>
     </main>
 
-    <footer>
-      GP-H Consulta Histórica — ferramenta gratuita para consulta, organização e análise histórica dos resultados do Rio de Janeiro.
-    </footer>
+    <footer>GP-H Consulta Histórica — ferramenta gratuita para consulta, organização e análise histórica dos resultados do Rio de Janeiro.</footer>
   </div>
+
+  <script src="comments-config.js"></script>
+  <script>
+    (() => {
+      const cfg = window.GPH_COMMENTS || {};
+      const form = document.getElementById('comment-form');
+      const disabled = document.getElementById('comments-disabled');
+      const list = document.getElementById('comments-list');
+      const status = document.getElementById('form-status');
+      const ready = Boolean(cfg.submitUrl && cfg.listUrl);
+      if (!ready) return;
+      disabled.hidden = true;
+      form.hidden = false;
+
+      const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const fmt = (v) => { try { return new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v)); } catch { return ''; } };
+
+      async function loadComments(){
+        list.innerHTML = '<div class="empty">Carregando comentários...</div>';
+        try{
+          const r = await fetch(cfg.listUrl, {headers: cfg.publicHeaders || {}});
+          if(!r.ok) throw new Error('Falha ao carregar');
+          const data = await r.json();
+          const rows = Array.isArray(data) ? data : (data.comments || []);
+          if(!rows.length){ list.innerHTML = '<div class="empty">Ainda não há comentários. Seja o primeiro a enviar uma mensagem.</div>'; return; }
+          list.innerHTML = rows.map(x => `<article class="comment"><div class="comment-head"><span class="comment-name">${esc(x.name)}</span><span class="comment-date">${esc(fmt(x.created_at))}</span></div><div class="comment-body">${esc(x.message)}</div></article>`).join('');
+        }catch(e){ list.innerHTML = '<div class="empty">Não foi possível carregar os comentários agora.</div>'; }
+      }
+
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault(); status.className='form-status'; status.textContent='Enviando...';
+        const payload = {
+          name: document.getElementById('comment-name').value.trim(),
+          email: document.getElementById('comment-email').value.trim(),
+          message: document.getElementById('comment-message').value.trim(),
+          website: document.getElementById('comment-site').value.trim(),
+          page: location.pathname
+        };
+        try{
+          const r = await fetch(cfg.submitUrl,{method:'POST',headers:{'Content-Type':'application/json',...(cfg.publicHeaders||{})},body:JSON.stringify(payload)});
+          const data = await r.json().catch(()=>({}));
+          if(!r.ok) throw new Error(data.error || 'Não foi possível enviar.');
+          form.reset(); status.className='form-status ok'; status.textContent=data.message || 'Comentário enviado com sucesso.'; await loadComments();
+        }catch(e){ status.className='form-status error'; status.textContent=e.message || 'Não foi possível enviar agora.'; }
+      });
+      loadComments();
+    })();
+  </script>
 </body>
 </html>
