@@ -7,6 +7,7 @@ import 'screens/numbers_hub_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/stats_screen.dart';
 import 'services/app_update_service.dart';
+import 'theme/gph_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,41 +19,10 @@ class GphAndroidApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF3B82F6),
-      brightness: Brightness.dark,
-    );
-
     return MaterialApp(
       title: 'GP-H Consulta Histórica',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFF07101D),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF07101D),
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        snackBarTheme: const SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF0D1726),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF1C2B41)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF1C2B41)),
-          ),
-        ),
-      ),
+      theme: GphTheme.darkBlue,
       home: const GphShell(),
     );
   }
@@ -78,11 +48,19 @@ class _GphShellState extends State<GphShell> {
   ];
 
   static const _titles = <String>[
-    'GP-H Consulta Histórica',
+    'Consulta Histórica',
     'Jogos do dia',
     'Pesquisa',
     'Estatísticas',
     'Números',
+  ];
+
+  static const _sectionIcons = <IconData>[
+    Icons.home_rounded,
+    Icons.view_day_rounded,
+    Icons.search_rounded,
+    Icons.query_stats_rounded,
+    Icons.numbers_rounded,
   ];
 
   @override
@@ -152,7 +130,7 @@ class _GphShellState extends State<GphShell> {
             const SizedBox(height: 12),
             const Text(
               'Ao tocar em baixar, o Android abrirá o arquivo de atualização. Depois é só confirmar a instalação.',
-              style: TextStyle(color: Color(0xFF9FB0C5)),
+              style: TextStyle(color: GphTheme.textSecondary),
             ),
           ],
         ),
@@ -185,37 +163,68 @@ class _GphShellState extends State<GphShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 70,
         titleSpacing: 16,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            Text(
-              _titles[_index],
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 19),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: GphTheme.primarySoft,
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: GphTheme.borderStrong),
+              ),
+              child: Icon(
+                _sectionIcons[_index],
+                size: 22,
+                color: GphTheme.primary,
+              ),
             ),
-            Text(
-              'Android • v${AppUpdateService.currentVersion}',
-              style: const TextStyle(
-                color: Color(0xFF7F94AD),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _titles[_index],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: GphTheme.textPrimary,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 19,
+                      letterSpacing: -0.25,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'GP-H Android  •  v${AppUpdateService.currentVersion}',
+                    style: const TextStyle(
+                      color: GphTheme.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         actions: [
-          IconButton(
+          IconButton.filledTonal(
             tooltip: 'Verificar atualização',
             onPressed: _checkingUpdate ? null : () => _checkForUpdate(silent: false),
             icon: _checkingUpdate
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: 19,
+                    height: 19,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.system_update_alt_rounded),
+                : const Icon(Icons.system_update_alt_rounded, size: 21),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 10),
         ],
       ),
       body: IndexedStack(
@@ -224,7 +233,7 @@ class _GphShellState extends State<GphShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: const [
           NavigationDestination(
