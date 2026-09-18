@@ -5,6 +5,7 @@ import 'screens/games_screen.dart';
 import 'screens/home_explorer_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/stats_screen.dart';
+import 'screens/strong_numbers_screen.dart';
 import 'services/app_update_service.dart';
 
 void main() {
@@ -73,6 +74,7 @@ class _GphShellState extends State<GphShell> {
     GamesScreen(),
     SearchScreen(),
     StatsScreen(),
+    StrongNumbersScreen(),
   ];
 
   static const _titles = <String>[
@@ -80,6 +82,7 @@ class _GphShellState extends State<GphShell> {
     'Jogos do dia',
     'Pesquisa',
     'Estatísticas',
+    'Números fortes',
   ];
 
   @override
@@ -221,6 +224,7 @@ class _GphShellState extends State<GphShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: const [
           NavigationDestination(
@@ -242,6 +246,11 @@ class _GphShellState extends State<GphShell> {
             icon: Icon(Icons.query_stats_outlined),
             selectedIcon: Icon(Icons.query_stats_rounded),
             label: 'Estatísticas',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.numbers_outlined),
+            selectedIcon: Icon(Icons.numbers_rounded),
+            label: 'Números',
           ),
         ],
       ),
