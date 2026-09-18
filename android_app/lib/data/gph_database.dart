@@ -144,11 +144,28 @@ class GphDatabase {
     return rows.map(HistoryResult.fromMap).toList(growable: false);
   }
 
+  Future<List<String>> distinctDraws() async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT sorteio, MAX(data || ' ' || hora) AS ultima
+      FROM resultados
+      WHERE TRIM(sorteio) <> ''
+      GROUP BY sorteio
+      ORDER BY ultima DESC, sorteio ASC
+    ''');
+    return rows
+        .map((row) => (row['sorteio'] ?? '').toString().trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+  }
+
   Future<List<HistoryResult>> search({
     required String mode,
     required String query,
     String? startDate,
     String? endDate,
+    int? prize,
+    String? draw,
     int limit = 250,
   }) async {
     final db = await database;
@@ -188,6 +205,15 @@ class GphDatabase {
     if (endDate != null) {
       clauses.add('data <= ?');
       args.add(endDate);
+    }
+    if (prize != null) {
+      clauses.add('premio = ?');
+      args.add(prize);
+    }
+    final normalizedDraw = draw?.trim();
+    if (normalizedDraw != null && normalizedDraw.isNotEmpty) {
+      clauses.add('sorteio = ?');
+      args.add(normalizedDraw);
     }
 
     final rows = await db.query(

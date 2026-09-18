@@ -1,1 +1,1 @@
-Alpha 4: Home redesenhada com último resultado mais legível e quatro atrasos atuais — Bicho 1º–5º, Cabeça 1º, Centena e Dezena — calculados somente sobre extrações completas. Mantém atualização online, sincronização histórica, Jogos do dia e Pesquisa.
+Alpha 5: Jogos do dia mais completos, com atualização direta, resumo de extrações, indicador de extração completa e detalhes de milhar/centena/dezena. Pesquisa redesenhada com seleção de bicho e filtros por prêmio, sorteio e período, mantendo a atualização online e os atrasos da Home.

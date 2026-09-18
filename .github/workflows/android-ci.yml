@@ -9,7 +9,7 @@ on:
       - '.github/workflows/android-ci.yml'
   push:
     branches:
-      - android-alpha4-home
+      - 'android-*'
     paths:
       - 'android_app/**'
       - '.github/workflows/android-ci.yml'
