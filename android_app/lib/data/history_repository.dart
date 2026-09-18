@@ -3,6 +3,7 @@ import '../models/delay_summary.dart';
 import '../models/frequency_stats.dart';
 import '../models/history_result.dart';
 import '../models/number_delay_stats.dart';
+import '../models/number_overview.dart';
 import '../models/strong_number_stats.dart';
 import '../services/animal_delay_calculator.dart';
 import '../services/delay_calculator.dart';
@@ -10,6 +11,7 @@ import '../services/number_delay_calculator.dart';
 import '../services/strong_number_calculator.dart';
 import 'animals.dart';
 import 'gph_database.dart';
+import 'gph_database_number_details.dart';
 import 'gph_database_rankings.dart';
 
 class HistorySummary {
@@ -69,6 +71,54 @@ class HistoryRepository {
   Future<List<NumberDelayEntry>> numberDelays(NumberDelayMode mode) async {
     final rows = await _database.resultsForDelayAnalysis();
     return NumberDelayCalculator.calculate(rows, mode: mode);
+  }
+
+  Future<NumberOverview> numberOverview({
+    required String mode,
+    required String value,
+  }) async {
+    final normalized = normalizeNumberValue(mode, value);
+    final aggregateFuture = _database.numberAggregate(mode: mode, query: normalized);
+    final recentFuture = _database.latestForNumber(
+      mode: mode,
+      query: normalized,
+      limit: 12,
+    );
+    final firstFuture = _database.latestForNumber(
+      mode: mode,
+      query: normalized,
+      prize: 1,
+      limit: 1,
+    );
+    final delayFuture = switch (mode) {
+      'Dezena' => numberDelays(NumberDelayMode.ten),
+      'Centena' => numberDelays(NumberDelayMode.hundred),
+      _ => Future<List<NumberDelayEntry>>.value(const <NumberDelayEntry>[]),
+    };
+
+    final aggregate = await aggregateFuture;
+    final recent = await recentFuture;
+    final firstRows = await firstFuture;
+    final delayRows = await delayFuture;
+    final delay = delayRows.where((item) => item.value == normalized).firstOrNull;
+    final group = groupForNumberValue(normalized);
+    final animal = group >= 1 && group <= gphAnimals.length
+        ? gphAnimals.firstWhere((item) => item.group == group).name
+        : '';
+
+    return NumberOverview(
+      mode: mode,
+      value: normalized,
+      group: group,
+      animal: animal,
+      totalAppearances: _asInt(aggregate['total']),
+      firstPrizeAppearances: _asInt(aggregate['cabecas']),
+      currentDelay: delay?.delay,
+      completeDraws: delay?.completeDraws,
+      lastAny: recent.isEmpty ? null : recent.first,
+      lastFirst: firstRows.isEmpty ? null : firstRows.first,
+      recent: recent,
+    );
   }
 
   Future<List<String>> availableDraws() => _database.distinctDraws();

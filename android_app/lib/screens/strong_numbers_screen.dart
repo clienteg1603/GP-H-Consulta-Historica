@@ -4,6 +4,7 @@ import '../app_services.dart';
 import '../data/animals.dart';
 import '../models/animal.dart';
 import '../models/strong_number_stats.dart';
+import 'number_details_sheet.dart';
 
 class StrongNumbersScreen extends StatefulWidget {
   const StrongNumbersScreen({super.key});
@@ -97,7 +98,7 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
                       ),
                       SizedBox(height: 3),
                       Text(
-                        'Ranking histórico por frequência. Em empate, a ocorrência mais recente vem primeiro e o menor número é o desempate final.',
+                        'Ranking histórico por frequência. Toque em qualquer número para abrir sua ficha completa.',
                         style: TextStyle(color: Color(0xFF9FB0C5), fontSize: 12),
                       ),
                     ],
@@ -309,7 +310,7 @@ class _RankingPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         const Text(
-          'Este ranking descreve o histórico salvo no aparelho; não representa garantia de ocorrência futura.',
+          'Frequência, recência e histórico são descritivos. Toque numa linha para ver ocorrências e detalhes.',
           style: TextStyle(color: Color(0xFF71869F), fontSize: 10),
         ),
         const SizedBox(height: 10),
@@ -318,6 +319,7 @@ class _RankingPanel extends StatelessWidget {
           (index) => _NumberRow(
             position: index + 1,
             item: shown[index],
+            kind: kind,
           ),
         ),
       ],
@@ -354,80 +356,95 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _NumberRow extends StatelessWidget {
-  const _NumberRow({required this.position, required this.item});
+  const _NumberRow({
+    required this.position,
+    required this.item,
+    required this.kind,
+  });
 
   final int position;
   final StrongNumberEntry item;
+  final StrongNumberKind kind;
 
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0B1523),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF1C2B41)),
+  Widget build(BuildContext context) => InkWell(
+        onTap: () => showNumberDetails(
+          context,
+          mode: _modeForKind(kind),
+          value: item.value,
         ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 34,
-              child: Text(
-                '$positionº',
-                style: const TextStyle(color: Color(0xFF6E86A1), fontWeight: FontWeight.w800),
-              ),
-            ),
-            Container(
-              constraints: const BoxConstraints(minWidth: 62),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF162A46),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                item.value,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFFBFD8FF),
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0B1523),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF1C2B41)),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 34,
+                child: Text(
+                  '$positionº',
+                  style: const TextStyle(color: Color(0xFF6E86A1), fontWeight: FontWeight.w800),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                constraints: const BoxConstraints(minWidth: 62),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF162A46),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  item.value,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFFBFD8FF),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Última: ${_date(item.lastDate)} • ${item.lastTime}',
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${item.lastDraw} • ${item.lastPrize}º prêmio',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Última: ${_date(item.lastDate)} • ${item.lastTime}',
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
+                    '${item.count}x',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${item.lastDraw} • ${item.lastPrize}º prêmio',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                  const Text(
+                    'ocorrências',
+                    style: TextStyle(color: Color(0xFF7DB6FF), fontSize: 9),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${item.count}x',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
-                ),
-                const Text(
-                  'ocorrências',
-                  style: TextStyle(color: Color(0xFF7DB6FF), fontSize: 9),
-                ),
-              ],
-            ),
-          ],
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF536B85)),
+            ],
+          ),
         ),
       );
 }
@@ -465,6 +482,17 @@ class _MessageCard extends StatelessWidget {
         ),
         child: Text(text, style: const TextStyle(color: Color(0xFF9FB0C5))),
       );
+}
+
+String _modeForKind(StrongNumberKind kind) {
+  switch (kind) {
+    case StrongNumberKind.dozen:
+      return 'Dezena';
+    case StrongNumberKind.hundred:
+      return 'Centena';
+    case StrongNumberKind.thousand:
+      return 'Milhar';
+  }
 }
 
 String _date(String iso) {

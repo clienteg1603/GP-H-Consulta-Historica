@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_services.dart';
 import '../models/number_delay_stats.dart';
+import 'number_details_sheet.dart';
 
 class NumericDelaysScreen extends StatefulWidget {
   const NumericDelaysScreen({super.key});
@@ -79,7 +80,7 @@ class _NumericDelaysScreenState extends State<NumericDelaysScreen> {
                       ),
                       SizedBox(height: 3),
                       Text(
-                        'Veja há quantas extrações completas cada dezena ou centena não aparece nos cinco prêmios.',
+                        'Veja o atraso atual e toque em qualquer número para abrir sua ficha histórica.',
                         style: TextStyle(color: Color(0xFF9FB0C5), fontSize: 12),
                       ),
                     ],
@@ -215,7 +216,11 @@ class _NumericDelaysScreenState extends State<NumericDelaysScreen> {
                     ...List.generate(visible.length, (index) {
                       final item = visible[index];
                       final position = all.indexOf(item) + 1;
-                      return _NumberDelayRow(position: position, item: item);
+                      return _NumberDelayRow(
+                        position: position,
+                        item: item,
+                        mode: _mode,
+                      );
                     }),
                 ],
               );
@@ -268,65 +273,79 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _NumberDelayRow extends StatelessWidget {
-  const _NumberDelayRow({required this.position, required this.item});
+  const _NumberDelayRow({
+    required this.position,
+    required this.item,
+    required this.mode,
+  });
 
   final int position;
   final NumberDelayEntry item;
+  final NumberDelayMode mode;
 
   @override
   Widget build(BuildContext context) {
     final last = item.lastOccurrence;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B1523),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF182A40)),
+    return InkWell(
+      onTap: () => showNumberDetails(
+        context,
+        mode: mode == NumberDelayMode.ten ? 'Dezena' : 'Centena',
+        value: item.value,
       ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 34,
-            child: Text(
-              '#$position',
-              style: const TextStyle(color: Color(0xFF657D98), fontSize: 11, fontWeight: FontWeight.w800),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0B1523),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF182A40)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 34,
+              child: Text(
+                '#$position',
+                style: const TextStyle(color: Color(0xFF657D98), fontSize: 11, fontWeight: FontWeight.w800),
+              ),
             ),
-          ),
-          Container(
-            constraints: const BoxConstraints(minWidth: 58),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: const Color(0xFF12243A),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF244767)),
+            Container(
+              constraints: const BoxConstraints(minWidth: 58),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xFF12243A),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF244767)),
+              ),
+              child: Text(
+                item.value,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+              ),
             ),
-            child: Text(
-              item.value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${item.delay} extrações sem aparecer',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    last == null
+                        ? 'Sem ocorrência na base completa'
+                        : 'Última: ${_date(last.date)} • ${last.time} • ${last.draw} • ${last.prize}º',
+                    style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${item.delay} extrações sem aparecer',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  last == null
-                      ? 'Sem ocorrência na base completa'
-                      : 'Última: ${_date(last.date)} • ${last.time} • ${last.draw} • ${last.prize}º',
-                  style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
-                ),
-              ],
-            ),
-          ),
-        ],
+            const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF536B85)),
+          ],
+        ),
       ),
     );
   }
