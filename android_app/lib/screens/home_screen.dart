@@ -415,26 +415,10 @@ class _DelayGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = <Widget>[
-      _DelayCard(
-        caption: 'Bicho 1º–5º',
-        icon: Icons.pets_rounded,
-        leader: summary.animalAny,
-      ),
-      _DelayCard(
-        caption: 'Cabeça 1º',
-        icon: Icons.workspace_premium_rounded,
-        leader: summary.animalHead,
-      ),
-      _DelayCard(
-        caption: 'Centena',
-        icon: Icons.pin_rounded,
-        leader: summary.hundred,
-      ),
-      _DelayCard(
-        caption: 'Dezena',
-        icon: Icons.numbers_rounded,
-        leader: summary.ten,
-      ),
+      _DelayCard(caption: 'Bicho 1º–5º', icon: Icons.pets_rounded, leader: summary.animalAny),
+      _DelayCard(caption: 'Cabeça 1º', icon: Icons.workspace_premium_rounded, leader: summary.animalHead),
+      _DelayCard(caption: 'Centena', icon: Icons.pin_rounded, leader: summary.hundred),
+      _DelayCard(caption: 'Dezena', icon: Icons.numbers_rounded, leader: summary.ten),
     ];
 
     return LayoutBuilder(
@@ -445,7 +429,9 @@ class _DelayGrid extends StatelessWidget {
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
-          children: cards.map((card) => SizedBox(width: width, child: card)).toList(),
+          children: cards
+              .map((card) => SizedBox(width: width, height: 160, child: card))
+              .toList(),
         );
       },
     );
@@ -464,7 +450,6 @@ class _DelayCard extends StatelessWidget {
     final item = leader;
     final last = item?.last;
     return Container(
-      constraints: const BoxConstraints(minHeight: 150),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: const Color(0xFF0D1726),
