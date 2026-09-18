@@ -2,10 +2,13 @@ import '../models/animal_delay_stats.dart';
 import '../models/delay_summary.dart';
 import '../models/frequency_stats.dart';
 import '../models/history_result.dart';
+import '../models/strong_number_stats.dart';
 import '../services/animal_delay_calculator.dart';
 import '../services/delay_calculator.dart';
+import '../services/strong_number_calculator.dart';
 import 'animals.dart';
 import 'gph_database.dart';
+import 'gph_database_rankings.dart';
 
 class HistorySummary {
   const HistorySummary({
@@ -126,6 +129,18 @@ class HistoryRepository {
       lastFirst: firstRows.isEmpty ? null : firstRows.first,
       recent: recent,
     );
+  }
+
+  Future<List<StrongNumberEntry>> strongNumbers({
+    required int group,
+    required StrongNumberKind kind,
+    required bool firstPrizeOnly,
+  }) async {
+    final rows = await _database.rowsForGroupNumberRanking(
+      group,
+      firstPrizeOnly: firstPrizeOnly,
+    );
+    return StrongNumberCalculator.calculate(rows, kind);
   }
 
   Future<List<HistoryResult>> search({
