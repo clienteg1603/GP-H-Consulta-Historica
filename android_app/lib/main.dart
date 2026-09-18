@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'app_services.dart';
 import 'screens/games_screen.dart';
 import 'screens/home_explorer_screen.dart';
+import 'screens/numbers_hub_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/stats_screen.dart';
-import 'screens/strong_numbers_screen.dart';
 import 'services/app_update_service.dart';
 
 void main() {
@@ -74,7 +74,7 @@ class _GphShellState extends State<GphShell> {
     GamesScreen(),
     SearchScreen(),
     StatsScreen(),
-    StrongNumbersScreen(),
+    NumbersHubScreen(),
   ];
 
   static const _titles = <String>[
@@ -82,7 +82,7 @@ class _GphShellState extends State<GphShell> {
     'Jogos do dia',
     'Pesquisa',
     'Estatísticas',
-    'Números fortes',
+    'Números',
   ];
 
   @override

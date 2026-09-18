@@ -2,9 +2,11 @@ import '../models/animal_delay_stats.dart';
 import '../models/delay_summary.dart';
 import '../models/frequency_stats.dart';
 import '../models/history_result.dart';
+import '../models/number_delay_stats.dart';
 import '../models/strong_number_stats.dart';
 import '../services/animal_delay_calculator.dart';
 import '../services/delay_calculator.dart';
+import '../services/number_delay_calculator.dart';
 import '../services/strong_number_calculator.dart';
 import 'animals.dart';
 import 'gph_database.dart';
@@ -62,6 +64,11 @@ class HistoryRepository {
   Future<List<AnimalDelayEntry>> animalDelays() async {
     final rows = await _database.resultsForDelayAnalysis();
     return AnimalDelayCalculator.calculate(rows);
+  }
+
+  Future<List<NumberDelayEntry>> numberDelays(NumberDelayMode mode) async {
+    final rows = await _database.resultsForDelayAnalysis();
+    return NumberDelayCalculator.calculate(rows, mode: mode);
   }
 
   Future<List<String>> availableDraws() => _database.distinctDraws();
