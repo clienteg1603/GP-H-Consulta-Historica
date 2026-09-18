@@ -4,6 +4,7 @@ import 'app_services.dart';
 import 'screens/games_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_screen.dart';
+import 'screens/stats_screen.dart';
 import 'services/app_update_service.dart';
 
 void main() {
@@ -71,12 +72,14 @@ class _GphShellState extends State<GphShell> {
     HomeScreen(),
     GamesScreen(),
     SearchScreen(),
+    StatsScreen(),
   ];
 
   static const _titles = <String>[
     'GP-H Consulta Histórica',
     'Jogos do dia',
     'Pesquisa',
+    'Estatísticas',
   ];
 
   @override
@@ -234,6 +237,11 @@ class _GphShellState extends State<GphShell> {
             icon: Icon(Icons.search_outlined),
             selectedIcon: Icon(Icons.search_rounded),
             label: 'Pesquisa',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.query_stats_outlined),
+            selectedIcon: Icon(Icons.query_stats_rounded),
+            label: 'Estatísticas',
           ),
         ],
       ),
