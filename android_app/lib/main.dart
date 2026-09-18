@@ -188,7 +188,7 @@ class _GphShellState extends State<GphShell> {
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 19),
             ),
             const Text(
-              'Android • v0.1.0 alpha 3',
+              'Android • v0.1.1 alpha 4',
               style: TextStyle(
                 color: Color(0xFF7F94AD),
                 fontSize: 11,
