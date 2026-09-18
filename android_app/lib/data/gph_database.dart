@@ -159,6 +159,74 @@ class GphDatabase {
         .toList(growable: false);
   }
 
+  Future<List<Map<String, Object?>>> frequencyByAnimal({
+    required bool firstPrizeOnly,
+    String? startDate,
+  }) async {
+    final db = await database;
+    final clauses = <String>[
+      firstPrizeOnly ? 'premio = 1' : 'premio BETWEEN 1 AND 5',
+    ];
+    final args = <Object?>[];
+    if (startDate != null) {
+      clauses.add('data >= ?');
+      args.add(startDate);
+    }
+
+    return db.rawQuery(
+      '''
+      SELECT
+        grupo,
+        bicho,
+        COUNT(*) AS total,
+        MAX(data) AS ultima_data,
+        MAX(data || ' ' || hora) AS ultima_chave
+      FROM resultados
+      WHERE ${clauses.join(' AND ')}
+      GROUP BY grupo, bicho
+      ORDER BY total DESC, ultima_chave DESC, grupo ASC
+      ''',
+      args,
+    );
+  }
+
+  Future<Map<String, Object?>> animalAggregate(int group) async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      '''
+      SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN premio = 1 THEN 1 ELSE 0 END) AS cabecas
+      FROM resultados
+      WHERE grupo = ? AND premio BETWEEN 1 AND 5
+      ''',
+      [group],
+    );
+    return rows.first;
+  }
+
+  Future<List<HistoryResult>> latestForGroup(
+    int group, {
+    int? prize,
+    int limit = 10,
+  }) async {
+    final db = await database;
+    final clauses = <String>['grupo = ?', 'premio BETWEEN 1 AND 5'];
+    final args = <Object?>[group];
+    if (prize != null) {
+      clauses.add('premio = ?');
+      args.add(prize);
+    }
+    final rows = await db.query(
+      'resultados',
+      where: clauses.join(' AND '),
+      whereArgs: args,
+      orderBy: 'data DESC, hora DESC, sorteio DESC, premio ASC',
+      limit: limit,
+    );
+    return rows.map(HistoryResult.fromMap).toList(growable: false);
+  }
+
   Future<List<HistoryResult>> search({
     required String mode,
     required String query,
