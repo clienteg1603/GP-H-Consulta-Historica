@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_services.dart';
+import '../data/animals.dart';
 import '../models/frequency_stats.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -208,7 +209,7 @@ class _RankingPanel extends StatelessWidget {
         const Text('Ranking de frequência', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
         const SizedBox(height: 3),
         const Text(
-          'Empates são ordenados pela ocorrência mais recente e depois pelo número do grupo.',
+          'Empates são ordenados pela ocorrência mais recente e depois pelo número do grupo. Toque em um bicho para abrir os detalhes.',
           style: TextStyle(color: Color(0xFF7F94AD), fontSize: 11),
         ),
         const SizedBox(height: 10),
@@ -259,73 +260,247 @@ class _FrequencyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF0B1523),
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showAnimalDetails(context, item.group),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF1C2B41)),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 32,
+                child: Text(
+                  '$positionº',
+                  style: const TextStyle(color: Color(0xFF6E86A1), fontWeight: FontWeight.w800),
+                ),
+              ),
+              Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF162A46),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  item.group.toString().padLeft(2, '0'),
+                  style: const TextStyle(color: Color(0xFFBFD8FF), fontWeight: FontWeight.w900),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_titleCase(item.animal), style: const TextStyle(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.lastDate == null
+                          ? 'Sem última ocorrência'
+                          : 'Última: ${_date(item.lastDate!)}${item.lastTime == null ? '' : ' • ${item.lastTime}'}',
+                      style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('${item.count}x', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  Text(
+                    '${item.percentage.toStringAsFixed(1)}%',
+                    style: const TextStyle(color: Color(0xFF7DB6FF), fontSize: 11, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF536B85)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showAnimalDetails(BuildContext context, int group) async {
+  final animal = gphAnimals.firstWhere((item) => item.group == group);
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: const Color(0xFF0D1726),
+    showDragHandle: true,
+    builder: (context) => SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          18,
+          0,
+          18,
+          18 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: FutureBuilder<AnimalOverview>(
+          future: AppServices.history.animalOverview(group),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 220,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError || snapshot.data == null) {
+              return const SizedBox(
+                height: 180,
+                child: Center(child: Text('Não foi possível carregar os detalhes deste bicho.')),
+              );
+            }
+            final info = snapshot.data!;
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF162A46),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          group.toString().padLeft(2, '0'),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFBFD8FF)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(info.animal, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+                            const SizedBox(height: 2),
+                            Text('Dezenas: ${animal.dozens}', style: const TextStyle(color: Color(0xFF9FB0C5))),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _AnimalMetric(label: '1º–5º', value: '${info.totalAppearances}x')),
+                      const SizedBox(width: 8),
+                      Expanded(child: _AnimalMetric(label: 'Cabeça 1º', value: '${info.firstPrizeAppearances}x')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _LastOccurrence(label: 'Última aparição 1º–5º', row: info.lastAny),
+                  const SizedBox(height: 8),
+                  _LastOccurrence(label: 'Última cabeça 1º', row: info.lastFirst),
+                  const SizedBox(height: 16),
+                  const Text('Ocorrências recentes', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  if (info.recent.isEmpty)
+                    const Text('Nenhuma ocorrência salva.', style: TextStyle(color: Color(0xFF7F94AD)))
+                  else
+                    ...info.recent.take(8).map(
+                      (row) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          children: [
+                            SizedBox(width: 80, child: Text(_date(row.date), style: const TextStyle(color: Color(0xFF8296AD)))),
+                            SizedBox(width: 48, child: Text(row.time)),
+                            SizedBox(width: 34, child: Text('${row.prize}º')),
+                            SizedBox(width: 58, child: Text(row.thousand, style: const TextStyle(fontWeight: FontWeight.w900))),
+                            Expanded(child: Text(row.draw, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF9FB0C5)))),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+class _AnimalMetric extends StatelessWidget {
+  const _AnimalMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF0B1523),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(13),
         border: Border.all(color: const Color(0xFF1C2B41)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 32,
-            child: Text(
-              '$positionº',
-              style: const TextStyle(color: Color(0xFF6E86A1), fontWeight: FontWeight.w800),
-            ),
-          ),
-          Container(
-            width: 38,
-            height: 38,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFF162A46),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              item.group.toString().padLeft(2, '0'),
-              style: const TextStyle(color: Color(0xFFBFD8FF), fontWeight: FontWeight.w900),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(_titleCase(item.animal), style: const TextStyle(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 2),
-                Text(
-                  item.lastDate == null
-                      ? 'Sem última ocorrência'
-                      : 'Última: ${_date(item.lastDate!)}${item.lastTime == null ? '' : ' • ${item.lastTime}'}',
-                  style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('${item.count}x', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-              Text(
-                '${item.percentage.toStringAsFixed(1)}%',
-                style: const TextStyle(color: Color(0xFF7DB6FF), fontSize: 11, fontWeight: FontWeight.w700),
-              ),
-            ],
+          Text(value, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+          Text(label, style: const TextStyle(color: Color(0xFF7F94AD), fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
+
+class _LastOccurrence extends StatelessWidget {
+  const _LastOccurrence({required this.label, required this.row});
+
+  final String label;
+  final dynamic row;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = row;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1523),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: Color(0xFF7F94AD), fontSize: 10)),
+          const SizedBox(height: 3),
+          Text(
+            value == null
+                ? 'Ainda não apareceu na base'
+                : '${_date(value.date)} • ${value.draw} ${value.time} • ${value.prize}º • ${value.thousand}',
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
         ],
       ),
     );
   }
+}
 
-  static String _date(String iso) {
-    final parts = iso.split('-');
-    if (parts.length != 3) return iso;
-    return '${parts[2]}/${parts[1]}/${parts[0]}';
-  }
+String _date(String iso) {
+  final parts = iso.split('-');
+  if (parts.length != 3) return iso;
+  return '${parts[2]}/${parts[1]}/${parts[0]}';
 }
 
 String _titleCase(String value) {
