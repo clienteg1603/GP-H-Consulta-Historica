@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../app_services.dart';
 import '../data/animals.dart';
+import '../models/animal_delay_stats.dart';
 import '../models/frequency_stats.dart';
+import '../models/history_result.dart';
+
+enum _StatsView { frequency, delay }
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -12,28 +16,40 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen> {
+  _StatsView _view = _StatsView.frequency;
   bool _firstPrizeOnly = false;
   int? _days;
   late Future<List<FrequencyEntry>> _ranking;
+  late Future<List<AnimalDelayEntry>> _delays;
 
   @override
   void initState() {
     super.initState();
-    _reload();
+    _reloadAll();
   }
 
-  void _reload() {
+  void _reloadAll() {
+    _reloadFrequency();
+    _delays = AppServices.history.animalDelays();
+  }
+
+  void _reloadFrequency() {
     _ranking = AppServices.history.animalFrequency(
       firstPrizeOnly: _firstPrizeOnly,
       days: _days,
     );
   }
 
+  void _changeView(_StatsView view) {
+    if (_view == view) return;
+    setState(() => _view = view);
+  }
+
   void _changeScope(bool firstPrizeOnly) {
     if (_firstPrizeOnly == firstPrizeOnly) return;
     setState(() {
       _firstPrizeOnly = firstPrizeOnly;
-      _reload();
+      _reloadFrequency();
     });
   }
 
@@ -41,17 +57,18 @@ class _StatsScreenState extends State<StatsScreen> {
     if (_days == days) return;
     setState(() {
       _days = days;
-      _reload();
+      _reloadFrequency();
     });
   }
 
   Future<void> _refresh() async {
-    setState(_reload);
-    await _ranking;
+    setState(_reloadAll);
+    await Future.wait([_ranking, _delays]);
   }
 
   @override
   Widget build(BuildContext context) {
+    final delayView = _view == _StatsView.delay;
     return RefreshIndicator(
       onRefresh: _refresh,
       child: ListView(
@@ -69,22 +86,28 @@ class _StatsScreenState extends State<StatsScreen> {
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: const Color(0xFF24405F)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.query_stats_rounded, color: Color(0xFF7DB6FF), size: 28),
-                SizedBox(width: 12),
+                Icon(
+                  delayView ? Icons.hourglass_bottom_rounded : Icons.query_stats_rounded,
+                  color: const Color(0xFF7DB6FF),
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Frequência dos bichos',
-                        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+                        delayView ? 'Atrasos dos bichos' : 'Frequência dos bichos',
+                        style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       Text(
-                        'Ranking descritivo calculado somente com os resultados salvos no aparelho.',
-                        style: TextStyle(color: Color(0xFF9FB0C5), fontSize: 12),
+                        delayView
+                            ? 'Atrasos atuais calculados somente com extrações completas salvas no aparelho.'
+                            : 'Ranking descritivo calculado somente com os resultados salvos no aparelho.',
+                        style: const TextStyle(color: Color(0xFF9FB0C5), fontSize: 12),
                       ),
                     ],
                   ),
@@ -93,13 +116,47 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text('Prêmios considerados', style: TextStyle(fontWeight: FontWeight.w800)),
+          const Text('Visualização', style: TextStyle(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
                 child: ChoiceChip(
-                  label: const SizedBox(width: double.infinity, child: Center(child: Text('1º–5º prêmio'))),
+                  label: const SizedBox(
+                    width: double.infinity,
+                    child: Center(child: Text('Frequência')),
+                  ),
+                  selected: _view == _StatsView.frequency,
+                  onSelected: (_) => _changeView(_StatsView.frequency),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ChoiceChip(
+                  label: const SizedBox(
+                    width: double.infinity,
+                    child: Center(child: Text('Atrasos')),
+                  ),
+                  selected: _view == _StatsView.delay,
+                  onSelected: (_) => _changeView(_StatsView.delay),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            delayView ? 'Tipo de atraso' : 'Prêmios considerados',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ChoiceChip(
+                  label: const SizedBox(
+                    width: double.infinity,
+                    child: Center(child: Text('1º–5º prêmio')),
+                  ),
                   selected: !_firstPrizeOnly,
                   onSelected: (_) => _changeScope(false),
                 ),
@@ -107,57 +164,87 @@ class _StatsScreenState extends State<StatsScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ChoiceChip(
-                  label: const SizedBox(width: double.infinity, child: Center(child: Text('Somente 1º'))),
+                  label: const SizedBox(
+                    width: double.infinity,
+                    child: Center(child: Text('Cabeça 1º')),
+                  ),
                   selected: _firstPrizeOnly,
                   onSelected: (_) => _changeScope(true),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const Text('Período', style: TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                label: const Text('Todo histórico'),
-                selected: _days == null,
-                onSelected: (_) => _changePeriod(null),
-              ),
-              ChoiceChip(
-                label: const Text('30 dias'),
-                selected: _days == 30,
-                onSelected: (_) => _changePeriod(30),
-              ),
-              ChoiceChip(
-                label: const Text('90 dias'),
-                selected: _days == 90,
-                onSelected: (_) => _changePeriod(90),
-              ),
-            ],
-          ),
+          if (!delayView) ...[
+            const SizedBox(height: 16),
+            const Text('Período', style: TextStyle(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('Todo histórico'),
+                  selected: _days == null,
+                  onSelected: (_) => _changePeriod(null),
+                ),
+                ChoiceChip(
+                  label: const Text('30 dias'),
+                  selected: _days == 30,
+                  onSelected: (_) => _changePeriod(30),
+                ),
+                ChoiceChip(
+                  label: const Text('90 dias'),
+                  selected: _days == 90,
+                  onSelected: (_) => _changePeriod(90),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 20),
-          FutureBuilder<List<FrequencyEntry>>(
-            future: _ranking,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(30),
-                  child: Center(child: CircularProgressIndicator()),
+          if (delayView)
+            FutureBuilder<List<AnimalDelayEntry>>(
+              future: _delays,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const _LoadingBlock(label: 'Calculando atrasos...');
+                }
+                if (snapshot.hasError) {
+                  return _message('Não foi possível calcular os atrasos agora.');
+                }
+                final rows = snapshot.data ?? const <AnimalDelayEntry>[];
+                if (rows.isEmpty) {
+                  return _message(
+                    'Os atrasos aparecem quando a base tiver extrações completas de 1º a 5º prêmio.',
+                  );
+                }
+                return _DelayRankingPanel(
+                  rows: rows,
+                  firstPrizeOnly: _firstPrizeOnly,
                 );
-              }
-              if (snapshot.hasError) {
-                return _message('Não foi possível calcular as estatísticas agora.');
-              }
-              final rows = snapshot.data ?? const <FrequencyEntry>[];
-              if (rows.isEmpty) {
-                return _message('Ainda não há resultados suficientes na base local para este recorte.');
-              }
-              return _RankingPanel(rows: rows, firstPrizeOnly: _firstPrizeOnly);
-            },
-          ),
+              },
+            )
+          else
+            FutureBuilder<List<FrequencyEntry>>(
+              future: _ranking,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const _LoadingBlock(label: 'Calculando frequência...');
+                }
+                if (snapshot.hasError) {
+                  return _message('Não foi possível calcular as estatísticas agora.');
+                }
+                final rows = snapshot.data ?? const <FrequencyEntry>[];
+                if (rows.isEmpty) {
+                  return _message(
+                    'Ainda não há resultados suficientes na base local para este recorte.',
+                  );
+                }
+                return _FrequencyRankingPanel(
+                  rows: rows,
+                  firstPrizeOnly: _firstPrizeOnly,
+                );
+              },
+            ),
         ],
       ),
     );
@@ -174,8 +261,30 @@ class _StatsScreenState extends State<StatsScreen> {
       );
 }
 
-class _RankingPanel extends StatelessWidget {
-  const _RankingPanel({required this.rows, required this.firstPrizeOnly});
+class _LoadingBlock extends StatelessWidget {
+  const _LoadingBlock({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(30),
+      child: Center(
+        child: Column(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 10),
+            Text(label, style: const TextStyle(color: Color(0xFF9FB0C5))),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FrequencyRankingPanel extends StatelessWidget {
+  const _FrequencyRankingPanel({required this.rows, required this.firstPrizeOnly});
 
   final List<FrequencyEntry> rows;
   final bool firstPrizeOnly;
@@ -192,7 +301,9 @@ class _RankingPanel extends StatelessWidget {
               child: _SummaryCard(
                 label: firstPrizeOnly ? 'Cabeças analisadas' : 'Prêmios analisados',
                 value: '$total',
-                icon: firstPrizeOnly ? Icons.workspace_premium_rounded : Icons.receipt_long_rounded,
+                icon: firstPrizeOnly
+                    ? Icons.workspace_premium_rounded
+                    : Icons.receipt_long_rounded,
               ),
             ),
             const SizedBox(width: 10),
@@ -206,7 +317,10 @@ class _RankingPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        const Text('Ranking de frequência', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        const Text(
+          'Ranking de frequência',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
         const SizedBox(height: 3),
         const Text(
           'Empates são ordenados pela ocorrência mais recente e depois pelo número do grupo. Toque em um bicho para abrir os detalhes.',
@@ -216,6 +330,71 @@ class _RankingPanel extends StatelessWidget {
         ...List.generate(rows.length, (index) {
           final item = rows[index];
           return _FrequencyRow(position: index + 1, item: item);
+        }),
+      ],
+    );
+  }
+}
+
+class _DelayRankingPanel extends StatelessWidget {
+  const _DelayRankingPanel({required this.rows, required this.firstPrizeOnly});
+
+  final List<AnimalDelayEntry> rows;
+  final bool firstPrizeOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    final ordered = [...rows]
+      ..sort((a, b) {
+        final byDelay = b
+            .delay(firstPrizeOnly: firstPrizeOnly)
+            .compareTo(a.delay(firstPrizeOnly: firstPrizeOnly));
+        if (byDelay != 0) return byDelay;
+        return a.group.compareTo(b.group);
+      });
+    final completeDraws = ordered.first.completeDraws;
+    final maxDelay = ordered.first.delay(firstPrizeOnly: firstPrizeOnly);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _SummaryCard(
+                label: 'Extrações completas',
+                value: '$completeDraws',
+                icon: Icons.fact_check_rounded,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _SummaryCard(
+                label: 'Maior atraso atual',
+                value: '$maxDelay ext.',
+                icon: Icons.hourglass_bottom_rounded,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          firstPrizeOnly ? 'Atraso na cabeça' : 'Atraso no 1º–5º prêmio',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 3),
+        const Text(
+          'O atraso conta quantas extrações completas passaram desde a última ocorrência. Bichos que ainda não apareceram recebem toda a extensão da base completa.',
+          style: TextStyle(color: Color(0xFF7F94AD), fontSize: 11),
+        ),
+        const SizedBox(height: 10),
+        ...List.generate(ordered.length, (index) {
+          final item = ordered[index];
+          return _DelayRow(
+            position: index + 1,
+            item: item,
+            firstPrizeOnly: firstPrizeOnly,
+          );
         }),
       ],
     );
@@ -260,73 +439,174 @@ class _FrequencyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFF0B1523),
-      borderRadius: BorderRadius.circular(14),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _showAnimalDetails(context, item.group),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF1C2B41)),
+    return _TappableRow(
+      onTap: () => _showAnimalDetails(context, item.group),
+      child: Row(
+        children: [
+          _PositionLabel(position: position),
+          _GroupBadge(group: item.group),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_titleCase(item.animal), style: const TextStyle(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(
+                  item.lastDate == null
+                      ? 'Sem última ocorrência'
+                      : 'Última: ${_date(item.lastDate!)}${item.lastTime == null ? '' : ' • ${item.lastTime}'}',
+                  style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                ),
+              ],
+            ),
           ),
-          child: Row(
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              SizedBox(
-                width: 32,
-                child: Text(
-                  '$positionº',
-                  style: const TextStyle(color: Color(0xFF6E86A1), fontWeight: FontWeight.w800),
+              Text('${item.count}x', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+              Text(
+                '${item.percentage.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  color: Color(0xFF7DB6FF),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              Container(
-                width: 38,
-                height: 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF162A46),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  item.group.toString().padLeft(2, '0'),
-                  style: const TextStyle(color: Color(0xFFBFD8FF), fontWeight: FontWeight.w900),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_titleCase(item.animal), style: const TextStyle(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.lastDate == null
-                          ? 'Sem última ocorrência'
-                          : 'Última: ${_date(item.lastDate!)}${item.lastTime == null ? '' : ' • ${item.lastTime}'}',
-                      style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('${item.count}x', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-                  Text(
-                    '${item.percentage.toStringAsFixed(1)}%',
-                    style: const TextStyle(color: Color(0xFF7DB6FF), fontSize: 11, fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF536B85)),
             ],
           ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF536B85)),
+        ],
+      ),
+    );
+  }
+}
+
+class _DelayRow extends StatelessWidget {
+  const _DelayRow({
+    required this.position,
+    required this.item,
+    required this.firstPrizeOnly,
+  });
+
+  final int position;
+  final AnimalDelayEntry item;
+  final bool firstPrizeOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    final delay = item.delay(firstPrizeOnly: firstPrizeOnly);
+    final last = item.last(firstPrizeOnly: firstPrizeOnly);
+    return _TappableRow(
+      onTap: () => _showAnimalDetails(context, item.group),
+      child: Row(
+        children: [
+          _PositionLabel(position: position),
+          _GroupBadge(group: item.group),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.animal, style: const TextStyle(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(
+                  last == null
+                      ? 'Ainda não apareceu nas extrações completas'
+                      : 'Última: ${_date(last.date)} • ${last.draw} ${last.time} • ${last.prize}º',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('$delay', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+              const Text(
+                'extrações',
+                style: TextStyle(color: Color(0xFF7DB6FF), fontSize: 10, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF536B85)),
+        ],
+      ),
+    );
+  }
+}
+
+class _TappableRow extends StatelessWidget {
+  const _TappableRow({required this.onTap, required this.child});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: const Color(0xFF0B1523),
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF1C2B41)),
+            ),
+            child: child,
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _PositionLabel extends StatelessWidget {
+  const _PositionLabel({required this.position});
+
+  final int position;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 32,
+      child: Text(
+        '$positionº',
+        style: const TextStyle(color: Color(0xFF6E86A1), fontWeight: FontWeight.w800),
+      ),
+    );
+  }
+}
+
+class _GroupBadge extends StatelessWidget {
+  const _GroupBadge({required this.group});
+
+  final int group;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFF162A46),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        group.toString().padLeft(2, '0'),
+        style: const TextStyle(color: Color(0xFFBFD8FF), fontWeight: FontWeight.w900),
       ),
     );
   }
@@ -380,7 +660,11 @@ Future<void> _showAnimalDetails(BuildContext context, int group) async {
                         ),
                         child: Text(
                           group.toString().padLeft(2, '0'),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFBFD8FF)),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFBFD8FF),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -388,9 +672,15 @@ Future<void> _showAnimalDetails(BuildContext context, int group) async {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(info.animal, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+                            Text(
+                              info.animal,
+                              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                            ),
                             const SizedBox(height: 2),
-                            Text('Dezenas: ${animal.dozens}', style: const TextStyle(color: Color(0xFF9FB0C5))),
+                            Text(
+                              'Dezenas: ${animal.dozens}',
+                              style: const TextStyle(color: Color(0xFF9FB0C5)),
+                            ),
                           ],
                         ),
                       ),
@@ -399,31 +689,90 @@ Future<void> _showAnimalDetails(BuildContext context, int group) async {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(child: _AnimalMetric(label: '1º–5º', value: '${info.totalAppearances}x')),
+                      Expanded(
+                        child: _AnimalMetric(
+                          label: 'Aparições 1º–5º',
+                          value: '${info.totalAppearances}x',
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Expanded(child: _AnimalMetric(label: 'Cabeça 1º', value: '${info.firstPrizeAppearances}x')),
+                      Expanded(
+                        child: _AnimalMetric(
+                          label: 'Cabeças 1º',
+                          value: '${info.firstPrizeAppearances}x',
+                        ),
+                      ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _AnimalMetric(
+                          label: 'Atraso 1º–5º',
+                          value: _delayValue(info.completeDraws, info.delayAny),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _AnimalMetric(
+                          label: 'Atraso cabeça',
+                          value: _delayValue(info.completeDraws, info.delayHead),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (info.completeDraws > 0) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Atrasos calculados sobre ${info.completeDraws} extrações completas.',
+                      style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   _LastOccurrence(label: 'Última aparição 1º–5º', row: info.lastAny),
                   const SizedBox(height: 8),
                   _LastOccurrence(label: 'Última cabeça 1º', row: info.lastFirst),
                   const SizedBox(height: 16),
-                  const Text('Ocorrências recentes', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  const Text(
+                    'Ocorrências recentes',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   if (info.recent.isEmpty)
-                    const Text('Nenhuma ocorrência salva.', style: TextStyle(color: Color(0xFF7F94AD)))
+                    const Text(
+                      'Nenhuma ocorrência salva.',
+                      style: TextStyle(color: Color(0xFF7F94AD)),
+                    )
                   else
                     ...info.recent.take(8).map(
                       (row) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 5),
                         child: Row(
                           children: [
-                            SizedBox(width: 80, child: Text(_date(row.date), style: const TextStyle(color: Color(0xFF8296AD)))),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                _date(row.date),
+                                style: const TextStyle(color: Color(0xFF8296AD)),
+                              ),
+                            ),
                             SizedBox(width: 48, child: Text(row.time)),
                             SizedBox(width: 34, child: Text('${row.prize}º')),
-                            SizedBox(width: 58, child: Text(row.thousand, style: const TextStyle(fontWeight: FontWeight.w900))),
-                            Expanded(child: Text(row.draw, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF9FB0C5)))),
+                            SizedBox(
+                              width: 58,
+                              child: Text(
+                                row.thousand,
+                                style: const TextStyle(fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                row.draw,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Color(0xFF9FB0C5)),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -457,7 +806,8 @@ class _AnimalMetric extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(value, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-          Text(label, style: const TextStyle(color: Color(0xFF7F94AD), fontSize: 11)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Color(0xFF7F94AD), fontSize: 10)),
         ],
       ),
     );
@@ -468,7 +818,7 @@ class _LastOccurrence extends StatelessWidget {
   const _LastOccurrence({required this.label, required this.row});
 
   final String label;
-  final dynamic row;
+  final HistoryResult? row;
 
   @override
   Widget build(BuildContext context) {
@@ -496,6 +846,9 @@ class _LastOccurrence extends StatelessWidget {
     );
   }
 }
+
+String _delayValue(int completeDraws, int delay) =>
+    completeDraws <= 0 ? '—' : '$delay ext.';
 
 String _date(String iso) {
   final parts = iso.split('-');

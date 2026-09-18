@@ -1,6 +1,8 @@
+import '../models/animal_delay_stats.dart';
 import '../models/delay_summary.dart';
 import '../models/frequency_stats.dart';
 import '../models/history_result.dart';
+import '../services/animal_delay_calculator.dart';
 import '../services/delay_calculator.dart';
 import 'animals.dart';
 import 'gph_database.dart';
@@ -54,6 +56,11 @@ class HistoryRepository {
     return DelayCalculator.calculate(rows);
   }
 
+  Future<List<AnimalDelayEntry>> animalDelays() async {
+    final rows = await _database.resultsForDelayAnalysis();
+    return AnimalDelayCalculator.calculate(rows);
+  }
+
   Future<List<String>> availableDraws() => _database.distinctDraws();
 
   Future<List<FrequencyEntry>> animalFrequency({
@@ -95,10 +102,14 @@ class HistoryRepository {
       _database.animalAggregate(group),
       _database.latestForGroup(group, limit: 8),
       _database.latestForGroup(group, prize: 1, limit: 1),
+      _database.resultsForDelayAnalysis(),
     ]);
     final aggregate = values[0] as Map<String, Object?>;
     final recent = values[1] as List<HistoryResult>;
     final firstRows = values[2] as List<HistoryResult>;
+    final delayRows = values[3] as List<HistoryResult>;
+    final delayEntries = AnimalDelayCalculator.calculate(delayRows);
+    final delay = delayEntries.where((item) => item.group == group).firstOrNull;
     final animal = recent.isNotEmpty
         ? _titleCase(recent.first.animal)
         : gphAnimals.firstWhere((item) => item.group == group).name;
@@ -108,6 +119,9 @@ class HistoryRepository {
       animal: animal,
       totalAppearances: _asInt(aggregate['total']),
       firstPrizeAppearances: _asInt(aggregate['cabecas']),
+      delayAny: delay?.delayAny ?? 0,
+      delayHead: delay?.delayHead ?? 0,
+      completeDraws: delay?.completeDraws ?? 0,
       lastAny: recent.isEmpty ? null : recent.first,
       lastFirst: firstRows.isEmpty ? null : firstRows.first,
       recent: recent,
@@ -156,4 +170,8 @@ class HistoryRepository {
 
   static String _isoDate(DateTime value) =>
       '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+}
+
+extension _FirstOrNull<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

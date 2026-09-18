@@ -26,6 +26,9 @@ class AnimalOverview {
     required this.animal,
     required this.totalAppearances,
     required this.firstPrizeAppearances,
+    required this.delayAny,
+    required this.delayHead,
+    required this.completeDraws,
     required this.recent,
     this.lastAny,
     this.lastFirst,
@@ -35,6 +38,9 @@ class AnimalOverview {
   final String animal;
   final int totalAppearances;
   final int firstPrizeAppearances;
+  final int delayAny;
+  final int delayHead;
+  final int completeDraws;
   final HistoryResult? lastAny;
   final HistoryResult? lastFirst;
   final List<HistoryResult> recent;
