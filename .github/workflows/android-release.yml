@@ -1,0 +1,178 @@
+name: Android release online
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'android_app/**'
+      - '.github/workflows/android-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Recuperar ou criar chave alpha de testes
+        shell: bash
+        run: |
+          set -euo pipefail
+          KEYSTORE=/tmp/gph-alpha.jks
+          KEY_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/android-release/gph-alpha.jks"
+          if curl -fsSL "$KEY_URL" -o "$KEYSTORE"; then
+            echo "Chave alpha existente recuperada."
+          else
+            echo "Criando a primeira chave alpha estável."
+            keytool -genkeypair -v \
+              -keystore "$KEYSTORE" \
+              -storepass gphalpha2026 \
+              -keypass gphalpha2026 \
+              -alias gphalpha \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=GP-H Android Alpha, OU=GP-H, O=GP-H, L=Rio de Janeiro, ST=RJ, C=BR"
+          fi
+          test -s "$KEYSTORE"
+
+      - name: Preparar projeto Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/gph_android_release
+          flutter create \
+            --platforms=android \
+            --org br.com.gph \
+            --project-name gph_consulta_android \
+            /tmp/gph_android_release
+
+          cp android_app/pubspec.yaml /tmp/gph_android_release/pubspec.yaml
+          rm -rf /tmp/gph_android_release/lib /tmp/gph_android_release/test
+          cp -R android_app/lib /tmp/gph_android_release/lib
+          cp -R android_app/test /tmp/gph_android_release/test
+          cp /tmp/gph-alpha.jks /tmp/gph_android_release/android/app/gph-alpha.jks
+
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path('/tmp/gph_android_release')
+          manifest = root / 'android/app/src/main/AndroidManifest.xml'
+          text = manifest.read_text(encoding='utf-8')
+          if 'android.permission.INTERNET' not in text:
+              text = text.replace(
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.INTERNET" />',
+                  1,
+              )
+          text = text.replace('android:label="gph_consulta_android"', 'android:label="GP-H Consulta Histórica"')
+          manifest.write_text(text, encoding='utf-8')
+
+          gradle = root / 'android/app/build.gradle.kts'
+          source = gradle.read_text(encoding='utf-8')
+          marker = '    buildTypes {'
+          signing = '''    signingConfigs {\n        create("gphAlpha") {\n            keyAlias = "gphalpha"\n            keyPassword = "gphalpha2026"\n            storeFile = file("gph-alpha.jks")\n            storePassword = "gphalpha2026"\n        }\n    }\n\n'''
+          if 'create("gphAlpha")' not in source:
+              if marker not in source:
+                  raise SystemExit('Bloco buildTypes não localizado no template Flutter.')
+              source = source.replace(marker, signing + marker, 1)
+          source = source.replace(
+              'signingConfig = signingConfigs.getByName("debug")',
+              'signingConfig = signingConfigs.getByName("gphAlpha")',
+          )
+          if 'signingConfig = signingConfigs.getByName("gphAlpha")' not in source:
+              raise SystemExit('Não foi possível configurar a assinatura alpha.')
+          gradle.write_text(source, encoding='utf-8')
+          PY
+
+      - name: Dependências
+        working-directory: /tmp/gph_android_release
+        run: flutter pub get
+
+      - name: Análise
+        working-directory: /tmp/gph_android_release
+        run: flutter analyze
+
+      - name: Testes
+        working-directory: /tmp/gph_android_release
+        run: flutter test
+
+      - name: Gerar APK ARM64 release
+        working-directory: /tmp/gph_android_release
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build apk --release --target-platform android-arm64
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+          test -s "$APK"
+          cp "$APK" /tmp/GP-H_Consulta_Historica_Android.apk
+          ls -lh /tmp/GP-H_Consulta_Historica_Android.apk
+
+      - name: Criar manifesto da atualização
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          pubspec = Path('android_app/pubspec.yaml').read_text(encoding='utf-8')
+          version_line = next(line for line in pubspec.splitlines() if line.startswith('version:'))
+          full = version_line.split(':', 1)[1].strip()
+          version, build = full.split('+', 1)
+          notes = Path('android_app/release_notes.txt').read_text(encoding='utf-8').strip()
+          apk = Path('/tmp/GP-H_Consulta_Historica_Android.apk')
+          sha = hashlib.sha256(apk.read_bytes()).hexdigest()
+          manifest = {
+              'version': version,
+              'build': int(build),
+              'url': 'https://raw.githubusercontent.com/clienteg1603/GP-H-Consulta-Historica/android-release/GP-H_Consulta_Historica_Android.apk',
+              'notes': notes,
+              'sha256': sha,
+              'size': apk.stat().st_size,
+          }
+          Path('/tmp/latest.json').write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(manifest, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Publicar canal android-release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --orphan android-release-tmp
+          git rm -rf .
+          cp /tmp/GP-H_Consulta_Historica_Android.apk ./GP-H_Consulta_Historica_Android.apk
+          cp /tmp/latest.json ./latest.json
+          cp /tmp/gph-alpha.jks ./gph-alpha.jks
+          cat > README.md <<'EOF'
+          # GP-H Android — canal de atualização
+
+          Esta branch é gerada automaticamente. O APK, o manifesto `latest.json` e a chave de assinatura alpha são usados pelo mecanismo de atualização do aplicativo Android.
+          EOF
+          git add .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Android release online"
+          git push --force origin HEAD:android-release
+
+      - name: Publicar APK também como artefato da execução
+        uses: actions/upload-artifact@v4
+        with:
+          name: GP-H_Consulta_Historica_Android_release
+          path: /tmp/GP-H_Consulta_Historica_Android.apk
+          if-no-files-found: error

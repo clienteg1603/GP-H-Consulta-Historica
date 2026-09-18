@@ -1,0 +1,1 @@
+Alpha 3: atualização pela internet, banco local, sincronização histórica, Jogos do dia e Pesquisa. Esta versão inaugura o canal de atualização online do GP-H Android.
