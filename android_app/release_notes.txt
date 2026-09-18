@@ -1,1 +1,1 @@
-Alpha 3: atualização pela internet, banco local, sincronização histórica, Jogos do dia e Pesquisa. Esta versão inaugura o canal de atualização online do GP-H Android.
+Alpha 4: Home redesenhada com último resultado mais legível e quatro atrasos atuais — Bicho 1º–5º, Cabeça 1º, Centena e Dezena — calculados somente sobre extrações completas. Mantém atualização online, sincronização histórica, Jogos do dia e Pesquisa.
