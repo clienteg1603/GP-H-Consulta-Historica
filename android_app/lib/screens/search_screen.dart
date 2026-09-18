@@ -133,7 +133,8 @@ class _SearchScreenState extends State<SearchScreen> {
         const SizedBox(height: 16),
         if (_mode == 'Bicho')
           DropdownButtonFormField<String>(
-            value: _queryController.text.isEmpty ? null : _queryController.text,
+            key: ValueKey('animal-${_queryController.text}'),
+            initialValue: _queryController.text.isEmpty ? null : _queryController.text,
             isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'Bicho',
@@ -295,7 +296,8 @@ class _FilterCard extends StatelessWidget {
             children: [
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: prize,
+                  key: ValueKey('prize-$prize'),
+                  initialValue: prize,
                   decoration: const InputDecoration(labelText: 'Prêmio'),
                   items: const [
                     DropdownMenuItem<int>(value: null, child: Text('Todos')),
@@ -316,7 +318,8 @@ class _FilterCard extends StatelessWidget {
                     final options = snapshot.data ?? const <String>[];
                     final selected = draw != null && options.contains(draw) ? draw : null;
                     return DropdownButtonFormField<String>(
-                      value: selected,
+                      key: ValueKey('draw-${draw ?? ''}'),
+                      initialValue: selected,
                       isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Sorteio'),
                       items: [
