@@ -1,0 +1,59 @@
+name: Android CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'android_app/**'
+      - '.github/workflows/android-ci.yml'
+  push:
+    branches:
+      - android-alpha4-home
+    paths:
+      - 'android_app/**'
+      - '.github/workflows/android-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preparar projeto Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/gph_android_ci
+          flutter create \
+            --platforms=android \
+            --org br.com.gph \
+            --project-name gph_consulta_android \
+            /tmp/gph_android_ci
+          cp android_app/pubspec.yaml /tmp/gph_android_ci/pubspec.yaml
+          rm -rf /tmp/gph_android_ci/lib /tmp/gph_android_ci/test
+          cp -R android_app/lib /tmp/gph_android_ci/lib
+          cp -R android_app/test /tmp/gph_android_ci/test
+
+      - name: Dependências
+        working-directory: /tmp/gph_android_ci
+        run: flutter pub get
+
+      - name: Análise
+        working-directory: /tmp/gph_android_ci
+        run: flutter analyze
+
+      - name: Testes
+        working-directory: /tmp/gph_android_ci
+        run: flutter test
+
+      - name: Compilar APK debug ARM64
+        working-directory: /tmp/gph_android_ci
+        run: flutter build apk --debug --target-platform android-arm64
