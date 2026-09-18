@@ -52,17 +52,23 @@ class HistoryRepository {
     return DelayCalculator.calculate(rows);
   }
 
+  Future<List<String>> availableDraws() => _database.distinctDraws();
+
   Future<List<HistoryResult>> search({
     required String mode,
     required String query,
     DateTime? start,
     DateTime? end,
+    int? prize,
+    String? draw,
   }) {
     return _database.search(
       mode: mode,
       query: query,
       startDate: start == null ? null : _isoDate(start),
       endDate: end == null ? null : _isoDate(end),
+      prize: prize,
+      draw: draw,
     );
   }
 
