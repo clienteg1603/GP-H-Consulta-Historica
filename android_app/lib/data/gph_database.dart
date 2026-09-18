@@ -134,6 +134,16 @@ class GphDatabase {
     return rows.map(HistoryResult.fromMap).toList(growable: false);
   }
 
+  Future<List<HistoryResult>> resultsForDelayAnalysis() async {
+    final db = await database;
+    final rows = await db.query(
+      'resultados',
+      where: 'premio BETWEEN 1 AND 5',
+      orderBy: 'data ASC, hora ASC, sorteio ASC, premio ASC',
+    );
+    return rows.map(HistoryResult.fromMap).toList(growable: false);
+  }
+
   Future<List<HistoryResult>> search({
     required String mode,
     required String query,
