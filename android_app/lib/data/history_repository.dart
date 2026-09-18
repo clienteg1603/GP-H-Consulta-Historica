@@ -1,4 +1,6 @@
+import '../models/delay_summary.dart';
 import '../models/history_result.dart';
+import '../services/delay_calculator.dart';
 import 'gph_database.dart';
 
 class HistorySummary {
@@ -43,6 +45,11 @@ class HistoryRepository {
 
   Future<List<HistoryResult>> latest({int limit = 25}) {
     return _database.latest(limit: limit);
+  }
+
+  Future<DelaySummary> delays() async {
+    final rows = await _database.resultsForDelayAnalysis();
+    return DelayCalculator.calculate(rows);
   }
 
   Future<List<HistoryResult>> search({
