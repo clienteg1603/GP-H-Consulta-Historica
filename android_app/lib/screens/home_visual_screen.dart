@@ -6,18 +6,16 @@ import '../data/history_repository.dart';
 import '../models/animal_delay_stats.dart';
 import '../models/delay_summary.dart';
 import '../models/history_result.dart';
-import '../services/background_sync_service.dart';
-import '../services/history_sync_service.dart';
 import '../theme/gph_theme.dart';
+import 'sync_settings_sheet.dart';
 import 'widgets/animal_explorer_widgets.dart';
-import 'widgets/background_sync_card.dart';
 import 'widgets/home_overview_widgets.dart';
 
 enum _AnimalSort { group, delayAny, delayHead }
 
 /// Composição visual da tela inicial.
 ///
-/// Reutiliza a mesma base, sincronização e cálculos; as mudanças desta camada
+/// Reutiliza a mesma base e os mesmos cálculos; as mudanças desta camada
 /// são somente de apresentação e ergonomia para toque.
 class HomeVisualScreen extends StatefulWidget {
   const HomeVisualScreen({super.key});
@@ -31,22 +29,12 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
   late Future<List<HistoryResult>> _latest;
   late Future<DelaySummary> _delays;
   late Future<List<AnimalDelayEntry>> _animalDelays;
-
-  bool _syncing = false;
-  bool _syncFailed = false;
-  SyncProgress? _progress;
-  String? _syncMessage;
   _AnimalSort _sort = _AnimalSort.group;
-
-  BackgroundSyncConfig? _backgroundConfig;
-  bool _backgroundConfigLoading = true;
-  bool _backgroundConfigSaving = false;
 
   @override
   void initState() {
     super.initState();
     _reloadLocal();
-    _initializeBackgroundSync();
   }
 
   void _reloadLocal() {
@@ -56,152 +44,21 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
     _animalDelays = AppServices.history.animalDelays();
   }
 
-  Future<void> _initializeBackgroundSync() async {
-    try {
-      await AppServices.background.ensureScheduled();
-      final config = await AppServices.background.config();
-      if (!mounted) return;
-      setState(() {
-        _backgroundConfig = config;
-        _backgroundConfigLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _backgroundConfigLoading = false);
-    }
-  }
-
-  Future<void> _reloadBackgroundConfig() async {
-    final config = await AppServices.background.config();
-    if (!mounted) return;
-    setState(() {
-      _backgroundConfig = config;
-      _backgroundConfigLoading = false;
-    });
-  }
-
-  Future<void> _setAutomaticSync(bool enabled) async {
-    if (_backgroundConfigSaving) return;
-    setState(() => _backgroundConfigSaving = true);
-    try {
-      if (enabled) {
-        final summary = await AppServices.history.summary();
-        if (summary.isEmpty) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Prepare o histórico antes de ativar a atualização automática.'),
-            ),
-          );
-          return;
-        }
-      }
-
-      await AppServices.background.setEnabled(enabled);
-      await _reloadBackgroundConfig();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            enabled
-                ? 'Atualização automática ativada.'
-                : 'Atualização automática desativada.',
-          ),
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Não foi possível alterar a atualização automática agora.'),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _backgroundConfigSaving = false);
-    }
-  }
-
-  Future<void> _setResultNotifications(bool enabled) async {
-    if (_backgroundConfigSaving) return;
-    setState(() => _backgroundConfigSaving = true);
-    try {
-      if (enabled) {
-        final granted = await AppServices.notifications.requestPermission();
-        if (!granted) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Permita as notificações do GP-H no Android para receber os avisos.',
-              ),
-            ),
-          );
-          return;
-        }
-      }
-      await AppServices.background.setNotificationsEnabled(enabled);
-      await _reloadBackgroundConfig();
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível alterar as notificações agora.')),
-      );
-    } finally {
-      if (mounted) setState(() => _backgroundConfigSaving = false);
-    }
-  }
-
   Future<void> _refresh() async {
     setState(_reloadLocal);
     await Future.wait([_summary, _latest, _delays, _animalDelays]);
-    await _reloadBackgroundConfig();
   }
 
-  Future<void> _sync() async {
-    if (_syncing) return;
-    setState(() {
-      _syncing = true;
-      _syncFailed = false;
-      _progress = null;
-      _syncMessage = null;
-    });
-
-    try {
-      final result = await AppServices.sync.sync(
-        onProgress: (progress) {
-          if (mounted) setState(() => _progress = progress);
-        },
-      );
-      if (!mounted) return;
-
-      setState(() {
-        _reloadLocal();
-        _syncFailed = false;
-        _syncMessage = result.initialLoad
-            ? 'Primeira sincronização concluída. ${result.saved} prêmios processados.'
-            : 'Atualização concluída. ${result.saved} prêmios processados.';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_syncMessage!)));
-    } on SyncException catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _reloadLocal();
-        _syncFailed = true;
-        _syncMessage = error.message;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _syncFailed = true;
-        _syncMessage = 'Não foi possível sincronizar agora.';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível sincronizar agora.')),
-      );
-    } finally {
-      if (mounted) setState(() => _syncing = false);
-    }
+  Future<void> _openSyncSettings() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.58),
+      builder: (_) => const SyncSettingsSheet(),
+    );
+    if (!mounted) return;
+    setState(_reloadLocal);
   }
 
   @override
@@ -212,26 +69,6 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
         children: [
-          FutureBuilder<HistorySummary>(
-            future: _summary,
-            builder: (context, snapshot) => HomeSyncCard(
-              summary: snapshot.data,
-              syncing: _syncing,
-              progress: _progress,
-              message: _syncMessage,
-              messageIsError: _syncFailed,
-              onSync: _sync,
-            ),
-          ),
-          const SizedBox(height: 12),
-          BackgroundSyncCard(
-            config: _backgroundConfig,
-            loading: _backgroundConfigLoading,
-            saving: _backgroundConfigSaving,
-            onAutoChanged: _setAutomaticSync,
-            onNotificationsChanged: _setResultNotifications,
-          ),
-          const SizedBox(height: 14),
           FutureBuilder<List<HistoryResult>>(
             future: _latest,
             builder: (context, snapshot) {
@@ -251,12 +88,21 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
               final rows = snapshot.data ?? const <HistoryResult>[];
               if (rows.isEmpty) {
                 return const HomeInfoCard(
-                  text: 'Ainda não há resultados salvos. Prepare ou atualize o histórico acima.',
+                  text: 'Ainda não há resultados salvos. Toque em Base histórica abaixo para preparar o histórico.',
                   icon: Icons.inbox_outlined,
                 );
               }
               return LatestResultCard(rows: rows);
             },
+          ),
+          const SizedBox(height: 12),
+          FutureBuilder<HistorySummary>(
+            future: _summary,
+            builder: (context, snapshot) => _HistoryManageCard(
+              summary: snapshot.data,
+              loading: snapshot.connectionState == ConnectionState.waiting,
+              onTap: _openSyncSettings,
+            ),
           ),
           const SizedBox(height: 24),
           const HomeSectionTitle(
@@ -383,6 +229,110 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HistoryManageCard extends StatelessWidget {
+  const _HistoryManageCard({
+    required this.summary,
+    required this.loading,
+    required this.onTap,
+  });
+
+  final HistorySummary? summary;
+  final bool loading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final empty = summary == null || summary!.isEmpty;
+    final title = loading
+        ? 'Carregando base histórica...'
+        : empty
+            ? 'Base histórica'
+            : '${summary!.totalPrizes} prêmios salvos';
+    final subtitle = loading
+        ? 'Aguarde um instante.'
+        : empty
+            ? 'Toque para preparar o histórico e configurar a sincronização.'
+            : '${gphDate(summary!.firstDate)} → ${gphDate(summary!.lastDate)}';
+
+    return Material(
+      color: GphTheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: loading ? null : onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 68),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: GphTheme.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: GphTheme.primarySoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.storage_rounded,
+                  color: GphTheme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: GphTheme.textMuted,
+                        fontSize: 10,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: GphTheme.surfaceRaised,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: const Icon(
+                  Icons.tune_rounded,
+                  color: GphTheme.textSecondary,
+                  size: 19,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
