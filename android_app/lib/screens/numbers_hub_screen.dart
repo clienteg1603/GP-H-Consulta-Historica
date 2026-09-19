@@ -19,11 +19,12 @@ class _NumbersHubScreenState extends State<NumbersHubScreen> {
   @override
   Widget build(BuildContext context) {
     final strong = _view == _NumbersView.strong;
+    final accent = strong ? GphTheme.primary : GphTheme.delay;
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -41,6 +42,8 @@ class _NumbersHubScreenState extends State<NumbersHubScreen> {
                         icon: Icons.auto_graph_rounded,
                         label: 'Fortes por bicho',
                         selected: strong,
+                        accent: GphTheme.primary,
+                        selectedBackground: GphTheme.primarySoft,
                         onTap: () => setState(() => _view = _NumbersView.strong),
                       ),
                     ),
@@ -50,27 +53,34 @@ class _NumbersHubScreenState extends State<NumbersHubScreen> {
                         icon: Icons.hourglass_bottom_rounded,
                         label: 'Mais atrasados',
                         selected: !strong,
+                        accent: GphTheme.delay,
+                        selectedBackground: GphTheme.delaySoft,
                         onTap: () => setState(() => _view = _NumbersView.delayed),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 9),
+              const SizedBox(height: 10),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
                     strong ? Icons.info_outline_rounded : Icons.schedule_rounded,
-                    size: 15,
-                    color: GphTheme.textMuted,
+                    size: 16,
+                    color: accent,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       strong
                           ? 'Consulte dezenas, centenas e milhares com maior presença histórica em cada bicho.'
                           : 'Veja dezenas e centenas ordenadas pelo atraso atual na base histórica.',
-                      style: const TextStyle(color: GphTheme.textMuted, fontSize: 11, height: 1.3),
+                      style: const TextStyle(
+                        color: GphTheme.textMuted,
+                        fontSize: 11,
+                        height: 1.35,
+                      ),
                     ),
                   ),
                 ],
@@ -97,45 +107,52 @@ class _ModeButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.selected,
+    required this.accent,
+    required this.selectedBackground,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
+  final Color accent;
+  final Color selectedBackground;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) => Material(
-        color: selected ? GphTheme.primarySoft : Colors.transparent,
+        color: selected ? selectedBackground : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: selected ? GphTheme.primary : GphTheme.textMuted,
-                ),
-                const SizedBox(width: 7),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: selected ? GphTheme.textPrimary : GphTheme.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: selected ? accent : GphTheme.textMuted,
+                  ),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: selected ? GphTheme.textPrimary : GphTheme.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

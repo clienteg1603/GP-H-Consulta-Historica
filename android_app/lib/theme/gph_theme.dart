@@ -56,6 +56,7 @@ class GphTheme {
       scaffoldBackgroundColor: background,
       splashFactory: InkSparkle.splashFactory,
       visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
     );
 
     final textTheme = base.textTheme.copyWith(
@@ -165,16 +166,29 @@ class GphTheme {
         labelStyle: const TextStyle(color: textSecondary, fontWeight: FontWeight.w700),
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size.square(48),
+          foregroundColor: textSecondary,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: const Size(0, 44),
+          foregroundColor: primary,
+          textStyle: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(0, 46),
+          minimumSize: const Size(0, 48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 46),
+          minimumSize: const Size(0, 48),
           foregroundColor: textPrimary,
           side: const BorderSide(color: borderStrong),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),

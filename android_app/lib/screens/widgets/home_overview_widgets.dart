@@ -17,7 +17,7 @@ class HomeSectionTitle extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
         ],
       );
@@ -46,6 +46,55 @@ class HomeSyncCard extends StatelessWidget {
         ? null
         : progress!.current / progress!.total;
 
+    final identity = Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: GphTheme.primarySoft,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: const Icon(Icons.storage_rounded, color: GphTheme.primary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                empty ? 'Base histórica no celular' : '${summary!.totalPrizes} prêmios salvos',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                empty
+                    ? 'Histórico do Rio de Janeiro desde 02/01/2026.'
+                    : '${gphDate(summary!.firstDate)}  →  ${gphDate(summary!.lastDate)}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: GphTheme.textSecondary, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final syncButton = FilledButton.tonalIcon(
+      onPressed: syncing ? null : onSync,
+      icon: syncing
+          ? const SizedBox(
+              width: 17,
+              height: 17,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.sync_rounded, size: 19),
+      label: Text(empty ? 'Preparar histórico' : 'Atualizar histórico'),
+    );
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -60,49 +109,28 @@ class HomeSyncCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: GphTheme.primarySoft,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: const Icon(Icons.storage_rounded, color: GphTheme.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 370;
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      empty ? 'Base histórica no celular' : '${summary!.totalPrizes} prêmios salvos',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      empty
-                          ? 'Histórico do Rio de Janeiro desde 02/01/2026.'
-                          : '${gphDate(summary!.firstDate)}  →  ${gphDate(summary!.lastDate)}',
-                      style: const TextStyle(color: GphTheme.textSecondary, fontSize: 12),
-                    ),
+                    identity,
+                    const SizedBox(height: 12),
+                    syncButton,
                   ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                onPressed: syncing ? null : onSync,
-                icon: syncing
-                    ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.sync_rounded, size: 19),
-                label: Text(empty ? 'Preparar' : 'Atualizar'),
-              ),
-            ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: identity),
+                  const SizedBox(width: 10),
+                  syncButton,
+                ],
+              );
+            },
           ),
           if (syncing) ...[
             const SizedBox(height: 14),
@@ -112,12 +140,26 @@ class HomeSyncCard extends StatelessWidget {
               progress == null
                   ? 'Preparando sincronização...'
                   : 'Consultando ${gphDateTime(progress!.day)} • ${progress!.current}/${progress!.total} dias • ${progress!.saved} prêmios',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: GphTheme.textSecondary, fontSize: 11),
             ),
           ],
           if (!syncing && message != null) ...[
             const SizedBox(height: 10),
-            Text(message!, style: const TextStyle(color: GphTheme.success, fontSize: 11)),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.check_circle_outline_rounded, size: 16, color: GphTheme.success),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    message!,
+                    style: const TextStyle(color: GphTheme.success, fontSize: 11, height: 1.3),
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),
@@ -146,15 +188,29 @@ class LatestResultCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(Icons.emoji_events_rounded, color: GphTheme.warning, size: 21),
               const SizedBox(width: 8),
               const Expanded(
-                child: Text('Último resultado', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                child: Text(
+                  'Último resultado',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                ),
               ),
-              Text(
-                '${first.draw} • ${first.time}',
-                style: const TextStyle(color: GphTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.w700),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  '${first.draw} • ${first.time}',
+                  maxLines: 2,
+                  textAlign: TextAlign.end,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: GphTheme.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
           ),
@@ -164,7 +220,7 @@ class LatestResultCard extends StatelessWidget {
           ...ordered.map(
             (row) => Container(
               margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               decoration: BoxDecoration(
                 color: GphTheme.surfaceRaised,
                 borderRadius: BorderRadius.circular(11),
@@ -180,8 +236,14 @@ class LatestResultCard extends StatelessWidget {
                     child: Text(row.thousand, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
                   ),
                   Expanded(
-                    child: Text(gphTitleCase(row.animal), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(
+                      gphTitleCase(row.animal),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
+                  const SizedBox(width: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                     decoration: BoxDecoration(
@@ -211,10 +273,10 @@ class DelayStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('1º–5º', summary.animalAny, Icons.pets_rounded),
-      ('Cabeça', summary.animalHead, Icons.workspace_premium_rounded),
-      ('Centena', summary.hundred, Icons.filter_3_rounded),
-      ('Dezena', summary.ten, Icons.pin_rounded),
+      ('1º–5º', summary.animalAny, Icons.pets_rounded, GphTheme.delay, GphTheme.delaySoft),
+      ('Cabeça', summary.animalHead, Icons.workspace_premium_rounded, GphTheme.head, GphTheme.headSoft),
+      ('Centena', summary.hundred, Icons.filter_3_rounded, GphTheme.delay, GphTheme.delaySoft),
+      ('Dezena', summary.ten, Icons.pin_rounded, GphTheme.delay, GphTheme.delaySoft),
     ];
 
     return LayoutBuilder(
@@ -225,8 +287,11 @@ class DelayStrip extends StatelessWidget {
           runSpacing: 8,
           children: items.map((item) {
             final leader = item.$2;
+            final accent = item.$4;
+            final background = item.$5;
             return Container(
               width: width,
+              constraints: const BoxConstraints(minHeight: 82),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: GphTheme.surfaceRaised,
@@ -236,20 +301,30 @@ class DelayStrip extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    width: 35,
-                    height: 35,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: GphTheme.primarySoft,
+                      color: background,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(item.$3, color: GphTheme.primary, size: 18),
+                    child: Icon(item.$3, color: accent, size: 18),
                   ),
                   const SizedBox(width: 9),
                   Expanded(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item.$1, style: const TextStyle(color: GphTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w700)),
+                        Text(
+                          item.$1,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: GphTheme.textMuted,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         Text(
                           leader?.value ?? '—',
                           maxLines: 1,
@@ -258,7 +333,9 @@ class DelayStrip extends StatelessWidget {
                         ),
                         Text(
                           leader == null ? 'Sem dados' : '${leader.delay} extrações',
-                          style: const TextStyle(color: GphTheme.primary, fontSize: 10),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -280,13 +357,25 @@ class HomeInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
+        width: double.infinity,
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: GphTheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: GphTheme.border),
         ),
-        child: Text(text, style: const TextStyle(color: GphTheme.textSecondary)),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded, size: 19, color: GphTheme.textMuted),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(color: GphTheme.textSecondary, height: 1.3),
+              ),
+            ),
+          ],
+        ),
       );
 }
 

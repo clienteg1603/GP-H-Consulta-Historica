@@ -7,15 +7,16 @@ import '../models/animal_delay_stats.dart';
 import '../models/delay_summary.dart';
 import '../models/history_result.dart';
 import '../services/history_sync_service.dart';
+import '../theme/gph_theme.dart';
 import 'widgets/animal_explorer_widgets.dart';
 import 'widgets/home_overview_widgets.dart';
 
 enum _AnimalSort { group, delayAny, delayHead }
 
-/// Nova composição visual da tela inicial.
+/// Composição visual da tela inicial.
 ///
-/// Reutiliza exatamente a mesma base, sincronização e cálculos da Alpha 11;
-/// a mudança aqui é somente de apresentação e ergonomia para toque.
+/// Reutiliza a mesma base, sincronização e cálculos; as mudanças desta camada
+/// são somente de apresentação e ergonomia para toque.
 class HomeVisualScreen extends StatefulWidget {
   const HomeVisualScreen({super.key});
 
@@ -153,20 +154,29 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
             child: Row(
               children: [
                 _SortChip(
+                  icon: Icons.grid_view_rounded,
                   label: 'Grupo',
                   selected: _sort == _AnimalSort.group,
+                  accent: GphTheme.primary,
+                  selectedBackground: GphTheme.primarySoft,
                   onTap: () => setState(() => _sort = _AnimalSort.group),
                 ),
                 const SizedBox(width: 8),
                 _SortChip(
+                  icon: Icons.hourglass_bottom_rounded,
                   label: 'Atraso 1º–5º',
                   selected: _sort == _AnimalSort.delayAny,
+                  accent: GphTheme.delay,
+                  selectedBackground: GphTheme.delaySoft,
                   onTap: () => setState(() => _sort = _AnimalSort.delayAny),
                 ),
                 const SizedBox(width: 8),
                 _SortChip(
+                  icon: Icons.workspace_premium_rounded,
                   label: 'Atraso cabeça',
                   selected: _sort == _AnimalSort.delayHead,
+                  accent: GphTheme.head,
+                  selectedBackground: GphTheme.headSoft,
                   onTap: () => setState(() => _sort = _AnimalSort.delayHead),
                 ),
               ],
@@ -210,16 +220,56 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
 }
 
 class _SortChip extends StatelessWidget {
-  const _SortChip({required this.label, required this.selected, required this.onTap});
+  const _SortChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.accent,
+    required this.selectedBackground,
+    required this.onTap,
+  });
 
+  final IconData icon;
   final String label;
   final bool selected;
+  final Color accent;
+  final Color selectedBackground;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
+  Widget build(BuildContext context) => Material(
+        color: selected ? selectedBackground : GphTheme.surfaceRaised,
+        borderRadius: BorderRadius.circular(13),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(13),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: selected ? accent : GphTheme.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  selected ? Icons.check_rounded : icon,
+                  size: 17,
+                  color: selected ? accent : GphTheme.textMuted,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? GphTheme.textPrimary : GphTheme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
 }
