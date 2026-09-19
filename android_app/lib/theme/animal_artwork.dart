@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'gph_theme.dart';
 
-/// Exibe somente a célula correspondente ao grupo dentro da folha 5x5.
+/// Ilustração visual dos 25 grupos.
 ///
-/// A folha é carregada como asset real do Flutter. Isso evita a decodificação
-/// de uma imagem grande embutida em Base64 durante a execução e mantém as
-/// ilustrações disponíveis offline.
+/// A Alpha 14 deixa de depender de uma folha de imagem externa/embutida para
+/// evitar falhas de decodificação no Android. Os animais são renderizados com
+/// glifos nativos do sistema, permanecendo nítidos em qualquer tamanho e
+/// funcionando totalmente offline.
 class AnimalArtwork extends StatelessWidget {
   const AnimalArtwork({
     super.key,
@@ -19,68 +20,107 @@ class AnimalArtwork extends StatelessWidget {
   final double borderRadius;
   final bool showGlow;
 
-  static const String _sheetAsset = 'lib/assets/animals/cartoon_sheet.jpg';
   static const double _cellAspectRatio = 250 / 146;
+
+  static const Map<int, String> _animalGlyph = {
+    1: '🐦', // Avestruz
+    2: '🦅', // Águia
+    3: '🐴', // Burro
+    4: '🦋', // Borboleta
+    5: '🐕', // Cachorro
+    6: '🐐', // Cabra
+    7: '🐏', // Carneiro
+    8: '🐫', // Camelo
+    9: '🐍', // Cobra
+    10: '🐇', // Coelho
+    11: '🐎', // Cavalo
+    12: '🐘', // Elefante
+    13: '🐓', // Galo
+    14: '🐈', // Gato
+    15: '🐊', // Jacaré
+    16: '🦁', // Leão
+    17: '🐒', // Macaco
+    18: '🐖', // Porco
+    19: '🦚', // Pavão
+    20: '🦃', // Peru
+    21: '🐂', // Touro
+    22: '🐅', // Tigre
+    23: '🐻', // Urso
+    24: '🦌', // Veado
+    25: '🐄', // Vaca
+  };
 
   @override
   Widget build(BuildContext context) {
-    final index = group - 1;
-    final row = index ~/ 5;
-    final column = index % 5;
+    final glyph = _animalGlyph[group] ?? '🐾';
 
     return AspectRatio(
       aspectRatio: _cellAspectRatio,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-          final fullWidth = width * 5;
-          final fullHeight = height * 5;
+          final shortest = constraints.biggest.shortestSide;
+          final fontSize = shortest.clamp(46.0, 94.0);
 
           return DecoratedBox(
             decoration: BoxDecoration(
-              color: GphTheme.surfaceSoft,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF12253C), Color(0xFF091522)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(borderRadius),
+              border: Border.all(color: GphTheme.border),
               boxShadow: showGlow
                   ? const [
                       BoxShadow(
-                        color: Color(0x1A4EA1FF),
-                        blurRadius: 16,
-                        spreadRadius: -4,
+                        color: Color(0x244EA1FF),
+                        blurRadius: 18,
+                        spreadRadius: -6,
                       ),
                     ]
                   : null,
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(borderRadius),
-              child: ClipRect(
-                child: OverflowBox(
-                  minWidth: fullWidth,
-                  maxWidth: fullWidth,
-                  minHeight: fullHeight,
-                  maxHeight: fullHeight,
-                  alignment: Alignment.topLeft,
-                  child: Transform.translate(
-                    offset: Offset(-column * width, -row * height),
-                    child: Image.asset(
-                      _sheetAsset,
-                      width: fullWidth,
-                      height: fullHeight,
-                      fit: BoxFit.fill,
-                      alignment: Alignment.topLeft,
-                      filterQuality: FilterQuality.high,
-                      gaplessPlayback: true,
-                      errorBuilder: (context, error, stackTrace) {
-                        return ColoredBox(
-                          color: GphTheme.surfaceSoft,
-                          child: const Center(
-                            child: Icon(Icons.pets_outlined),
-                          ),
-                        );
-                      },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    right: -18,
+                    top: -26,
+                    child: Container(
+                      width: 92,
+                      height: 92,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0x124EA1FF),
+                      ),
                     ),
                   ),
-                ),
+                  Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                        child: Text(
+                          glyph,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            height: 1,
+                            shadows: const [
+                              Shadow(
+                                color: Color(0x66000000),
+                                blurRadius: 12,
+                                offset: Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
