@@ -89,96 +89,19 @@ class _GamesScreenState extends State<GamesScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF122640), GphTheme.surfaceRaised],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: GphTheme.borderStrong),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: GphTheme.primarySoft,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: const Icon(
-                    Icons.calendar_month_rounded,
-                    color: GphTheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isToday ? 'Jogos de hoje' : 'Jogos do dia',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        _displayDate(_date),
-                        style: const TextStyle(color: GphTheme.textSecondary, fontWeight: FontWeight.w700),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton.filledTonal(
-                  tooltip: 'Escolher data',
-                  onPressed: _pickDate,
-                  icon: const Icon(Icons.edit_calendar_rounded, size: 20),
-                ),
-                const SizedBox(width: 5),
-                IconButton.filledTonal(
-                  tooltip: 'Atualizar resultados',
-                  onPressed: _syncing ? null : _syncAndReload,
-                  icon: _syncing
-                      ? const SizedBox(
-                          width: 19,
-                          height: 19,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.sync_rounded, size: 20),
-                ),
-              ],
-            ),
+          _DayHeader(
+            date: _date,
+            isToday: _isToday,
+            syncing: _syncing,
+            onPickDate: _pickDate,
+            onSync: _syncAndReload,
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _changeDate(_date.subtract(const Duration(days: 1))),
-                  icon: const Icon(Icons.chevron_left_rounded),
-                  label: const Text('Anterior'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                onPressed: _isToday ? null : () => _changeDate(DateTime.now()),
-                icon: const Icon(Icons.today_rounded, size: 17),
-                label: const Text('Hoje'),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _isToday
-                      ? null
-                      : () => _changeDate(_date.add(const Duration(days: 1))),
-                  icon: const Icon(Icons.chevron_right_rounded),
-                  label: const Text('Próximo'),
-                ),
-              ),
-            ],
+          _DayNavigation(
+            isToday: _isToday,
+            onPrevious: () => _changeDate(_date.subtract(const Duration(days: 1))),
+            onToday: () => _changeDate(DateTime.now()),
+            onNext: () => _changeDate(_date.add(const Duration(days: 1))),
           ),
           const SizedBox(height: 16),
           FutureBuilder<List<HistoryResult>>(
@@ -248,9 +171,153 @@ class _GamesScreenState extends State<GamesScreen> {
           ],
         ),
       );
+}
 
-  String _displayDate(DateTime value) =>
-      '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+class _DayHeader extends StatelessWidget {
+  const _DayHeader({
+    required this.date,
+    required this.isToday,
+    required this.syncing,
+    required this.onPickDate,
+    required this.onSync,
+  });
+
+  final DateTime date;
+  final bool isToday;
+  final bool syncing;
+  final VoidCallback onPickDate;
+  final VoidCallback onSync;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: GphTheme.primarySoft,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: const Icon(Icons.calendar_month_rounded, color: GphTheme.primary, size: 24),
+    );
+    final title = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isToday ? 'Jogos de hoje' : 'Jogos do dia',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          _displayDate(date),
+          style: const TextStyle(color: GphTheme.textSecondary, fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        OutlinedButton.icon(
+          onPressed: onPickDate,
+          icon: const Icon(Icons.edit_calendar_rounded, size: 18),
+          label: const Text('Data'),
+        ),
+        const SizedBox(width: 7),
+        FilledButton.tonalIcon(
+          onPressed: syncing ? null : onSync,
+          icon: syncing
+              ? const SizedBox(
+                  width: 17,
+                  height: 17,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.sync_rounded, size: 18),
+          label: Text(syncing ? 'Atualizando' : 'Atualizar'),
+        ),
+      ],
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF122640), GphTheme.surfaceRaised],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: GphTheme.borderStrong),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 430) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    icon,
+                    const SizedBox(width: 12),
+                    Expanded(child: title),
+                  ],
+                ),
+                const SizedBox(height: 13),
+                SizedBox(width: double.infinity, child: actions),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              icon,
+              const SizedBox(width: 12),
+              Expanded(child: title),
+              actions,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DayNavigation extends StatelessWidget {
+  const _DayNavigation({
+    required this.isToday,
+    required this.onPrevious,
+    required this.onToday,
+    required this.onNext,
+  });
+
+  final bool isToday;
+  final VoidCallback onPrevious;
+  final VoidCallback onToday;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onPrevious,
+              icon: const Icon(Icons.chevron_left_rounded),
+              label: const Text('Anterior', maxLines: 1),
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.tonalIcon(
+            onPressed: isToday ? null : onToday,
+            icon: const Icon(Icons.today_rounded, size: 17),
+            label: const Text('Hoje'),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: isToday ? null : onNext,
+              icon: const Icon(Icons.chevron_right_rounded),
+              label: const Text('Próximo', maxLines: 1),
+            ),
+          ),
+        ],
+      );
 }
 
 class _DaySummary extends StatelessWidget {
@@ -266,52 +333,63 @@ class _DaySummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: GphTheme.surfaceRaised,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: GphTheme.border),
-      ),
-      child: Row(
-        children: [
-          _SummaryValue(value: '$draws', label: 'extrações'),
-          const _SummaryDivider(),
-          _SummaryValue(value: '$prizes', label: 'prêmios'),
-          const _SummaryDivider(),
-          _SummaryValue(value: '$completeDraws', label: 'completas'),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cards = [
+          _SummaryValue(value: '$draws', label: 'extrações', icon: Icons.schedule_rounded),
+          _SummaryValue(value: '$prizes', label: 'prêmios', icon: Icons.receipt_long_rounded),
+          _SummaryValue(value: '$completeDraws', label: 'completas', icon: Icons.fact_check_rounded),
+        ];
+        if (constraints.maxWidth < 360) {
+          return Column(
+            children: cards
+                .map((card) => Padding(
+                      padding: const EdgeInsets.only(bottom: 7),
+                      child: SizedBox(width: double.infinity, child: card),
+                    ))
+                .toList(),
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: cards[0]),
+            const SizedBox(width: 8),
+            Expanded(child: cards[1]),
+            const SizedBox(width: 8),
+            Expanded(child: cards[2]),
+          ],
+        );
+      },
     );
   }
 }
 
 class _SummaryValue extends StatelessWidget {
-  const _SummaryValue({required this.value, required this.label});
+  const _SummaryValue({required this.value, required this.label, required this.icon});
 
   final String value;
   final String label;
+  final IconData icon;
 
   @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-          Text(label, style: const TextStyle(color: GphTheme.textMuted, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryDivider extends StatelessWidget {
-  const _SummaryDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: 1, height: 30, color: GphTheme.border);
-  }
+  Widget build(BuildContext context) => Container(
+        constraints: const BoxConstraints(minHeight: 80),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+        decoration: BoxDecoration(
+          color: GphTheme.surfaceRaised,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: GphTheme.border),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 17, color: GphTheme.primary),
+            const SizedBox(height: 5),
+            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            Text(label, style: const TextStyle(color: GphTheme.textMuted, fontSize: 10)),
+          ],
+        ),
+      );
 }
 
 class _DrawCard extends StatelessWidget {
@@ -336,7 +414,10 @@ class _DrawCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 9,
+            runSpacing: 7,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -349,13 +430,9 @@ class _DrawCard extends StatelessWidget {
                   style: const TextStyle(color: GphTheme.primary, fontWeight: FontWeight.w900),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  first.draw,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-                ),
+              Text(
+                first.draw,
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -395,8 +472,9 @@ class _PrizeRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: () => _showDetails(context),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 5),
-          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 7),
+          constraints: const BoxConstraints(minHeight: 62),
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           decoration: BoxDecoration(
             color: GphTheme.surfaceRaised,
             borderRadius: BorderRadius.circular(12),
@@ -412,21 +490,14 @@ class _PrizeRow extends StatelessWidget {
               ),
               SizedBox(
                 width: 50,
-                child: AnimalArtwork(
-                  group: row.group,
-                  borderRadius: 9,
-                  showGlow: false,
-                ),
+                child: AnimalArtwork(group: row.group, borderRadius: 9, showGlow: false),
               ),
               const SizedBox(width: 9),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      row.thousand,
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-                    ),
+                    Text(row.thousand, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
                     const SizedBox(height: 1),
                     Text(
                       row.animal,
@@ -462,50 +533,60 @@ class _PrizeRow extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       builder: (context) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 110,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 340;
+                  final art = SizedBox(
+                    width: compact ? 92 : 110,
                     child: AnimalArtwork(group: row.group, borderRadius: 14),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
+                  );
+                  final info = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        row.animal,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${row.prize}º prêmio • ${row.draw}',
+                        style: const TextStyle(color: GphTheme.textSecondary, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${_date(row.date)} • ${row.time}',
+                        style: const TextStyle(color: GphTheme.textMuted, fontSize: 11),
+                      ),
+                    ],
+                  );
+                  if (compact) {
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          row.animal,
-                          style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${row.prize}º prêmio • ${row.draw}',
-                          style: const TextStyle(color: GphTheme.textSecondary, fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${_date(row.date)} • ${row.time}',
-                          style: const TextStyle(color: GphTheme.textMuted, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                      children: [art, const SizedBox(height: 10), info],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [art, const SizedBox(width: 14), Expanded(child: info)],
+                  );
+                },
               ),
               const SizedBox(height: 18),
-              _DetailLine(label: 'Milhar', value: row.thousand),
-              _DetailLine(label: 'Centena', value: row.hundred),
-              _DetailLine(label: 'Dezena', value: row.ten),
+              _DetailLine(label: 'Milhar', value: row.thousand, accent: GphTheme.primary),
+              _DetailLine(label: 'Centena', value: row.hundred, accent: GphTheme.textPrimary),
+              _DetailLine(label: 'Dezena', value: row.ten, accent: GphTheme.textPrimary),
               _DetailLine(
                 label: 'Grupo',
                 value: '${row.group.toString().padLeft(2, '0')} • ${row.animal}',
+                accent: GphTheme.primary,
               ),
             ],
           ),
@@ -522,19 +603,21 @@ class _PrizeRow extends StatelessWidget {
 }
 
 class _DetailLine extends StatelessWidget {
-  const _DetailLine({required this.label, required this.value});
+  const _DetailLine({required this.label, required this.value, required this.accent});
 
   final String label;
   final String value;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 7),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         color: GphTheme.surface,
         borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: GphTheme.border),
       ),
       child: Row(
         children: [
@@ -545,7 +628,8 @@ class _DetailLine extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 16),
             ),
           ),
         ],
@@ -553,3 +637,6 @@ class _DetailLine extends StatelessWidget {
     );
   }
 }
+
+String _displayDate(DateTime value) =>
+    '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
