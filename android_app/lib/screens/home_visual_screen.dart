@@ -87,10 +87,9 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
               }
               final rows = snapshot.data ?? const <HistoryResult>[];
               if (rows.isEmpty) {
-                return HomeInfoCard(
-                  text: 'Ainda não há resultados salvos. Toque em Base histórica para preparar o histórico.',
+                return const HomeInfoCard(
+                  text: 'Ainda não há resultados salvos. Toque em Base histórica abaixo para preparar o histórico.',
                   icon: Icons.inbox_outlined,
-                  onTap: _openSyncSettings,
                 );
               }
               return LatestResultCard(rows: rows);
