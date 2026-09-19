@@ -70,6 +70,16 @@ class _StatsVisualScreenState extends State<StatsVisualScreen> {
   @override
   Widget build(BuildContext context) {
     final delayView = _view == _StatsView.delay;
+    final accent = _firstPrizeOnly
+        ? GphTheme.head
+        : delayView
+            ? GphTheme.delay
+            : GphTheme.frequency;
+    final accentSoft = _firstPrizeOnly
+        ? GphTheme.headSoft
+        : delayView
+            ? GphTheme.delaySoft
+            : GphTheme.primarySoft;
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -80,8 +90,8 @@ class _StatsVisualScreenState extends State<StatsVisualScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF122640), GphTheme.surfaceRaised],
+              gradient: LinearGradient(
+                colors: [accentSoft, GphTheme.surfaceRaised],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -94,12 +104,16 @@ class _StatsVisualScreenState extends State<StatsVisualScreen> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: GphTheme.primarySoft,
+                    color: accentSoft,
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: Icon(
-                    delayView ? Icons.hourglass_bottom_rounded : Icons.query_stats_rounded,
-                    color: GphTheme.primary,
+                    _firstPrizeOnly
+                        ? Icons.workspace_premium_rounded
+                        : delayView
+                            ? Icons.hourglass_bottom_rounded
+                            : Icons.query_stats_rounded,
+                    color: accent,
                     size: 24,
                   ),
                 ),
@@ -141,24 +155,22 @@ class _StatsVisualScreenState extends State<StatsVisualScreen> {
           Row(
             children: [
               Expanded(
-                child: ChoiceChip(
-                  label: const SizedBox(
-                    width: double.infinity,
-                    child: Center(child: Text('1º–5º prêmio')),
-                  ),
+                child: _ScopeButton(
+                  label: '1º–5º prêmio',
                   selected: !_firstPrizeOnly,
-                  onSelected: (_) => _changeScope(false),
+                  accent: delayView ? GphTheme.delay : GphTheme.frequency,
+                  selectedBackground: delayView ? GphTheme.delaySoft : GphTheme.primarySoft,
+                  onTap: () => _changeScope(false),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: ChoiceChip(
-                  label: const SizedBox(
-                    width: double.infinity,
-                    child: Center(child: Text('Cabeça 1º')),
-                  ),
+                child: _ScopeButton(
+                  label: 'Cabeça 1º',
                   selected: _firstPrizeOnly,
-                  onSelected: (_) => _changeScope(true),
+                  accent: GphTheme.head,
+                  selectedBackground: GphTheme.headSoft,
+                  onTap: () => _changeScope(true),
                 ),
               ),
             ],
@@ -260,6 +272,8 @@ class _ModeSelector extends StatelessWidget {
                 icon: Icons.query_stats_rounded,
                 label: 'Frequência',
                 selected: !delayView,
+                accent: GphTheme.frequency,
+                selectedBackground: GphTheme.primarySoft,
                 onTap: onFrequency,
               ),
             ),
@@ -269,6 +283,8 @@ class _ModeSelector extends StatelessWidget {
                 icon: Icons.hourglass_bottom_rounded,
                 label: 'Atrasos',
                 selected: delayView,
+                accent: GphTheme.delay,
+                selectedBackground: GphTheme.delaySoft,
                 onTap: onDelay,
               ),
             ),
@@ -282,17 +298,21 @@ class _ModeButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.selected,
+    required this.accent,
+    required this.selectedBackground,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
+  final Color accent;
+  final Color selectedBackground;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) => Material(
-        color: selected ? GphTheme.primarySoft : Colors.transparent,
+        color: selected ? selectedBackground : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -305,7 +325,7 @@ class _ModeButton extends StatelessWidget {
                 Icon(
                   icon,
                   size: 18,
-                  color: selected ? GphTheme.primary : GphTheme.textMuted,
+                  color: selected ? accent : GphTheme.textMuted,
                 ),
                 const SizedBox(width: 7),
                 Text(
@@ -323,6 +343,50 @@ class _ModeButton extends StatelessWidget {
       );
 }
 
+class _ScopeButton extends StatelessWidget {
+  const _ScopeButton({
+    required this.label,
+    required this.selected,
+    required this.accent,
+    required this.selectedBackground,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final Color accent;
+  final Color selectedBackground;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: selected ? selectedBackground : GphTheme.surfaceRaised,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: selected ? accent : GphTheme.border),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: selected ? accent : GphTheme.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
 class _FrequencyRanking extends StatelessWidget {
   const _FrequencyRanking({required this.rows, required this.firstPrizeOnly});
 
@@ -332,6 +396,8 @@ class _FrequencyRanking extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = rows.isEmpty ? 0 : rows.first.total;
+    final accent = firstPrizeOnly ? GphTheme.head : GphTheme.frequency;
+    final background = firstPrizeOnly ? GphTheme.headSoft : GphTheme.primarySoft;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,6 +411,8 @@ class _FrequencyRanking extends StatelessWidget {
                 icon: firstPrizeOnly
                     ? Icons.workspace_premium_rounded
                     : Icons.receipt_long_rounded,
+                accent: accent,
+                background: background,
               ),
             ),
             const SizedBox(width: 10),
@@ -353,6 +421,8 @@ class _FrequencyRanking extends StatelessWidget {
                 label: 'Bichos com ocorrência',
                 value: '${rows.length}/25',
                 icon: Icons.pets_rounded,
+                accent: accent,
+                background: background,
               ),
             ),
           ],
@@ -367,7 +437,11 @@ class _FrequencyRanking extends StatelessWidget {
         const SizedBox(height: 10),
         ...List.generate(
           rows.length,
-          (index) => _FrequencyRow(position: index + 1, item: rows[index]),
+          (index) => _FrequencyRow(
+            position: index + 1,
+            item: rows[index],
+            accent: accent,
+          ),
         ),
       ],
     );
@@ -392,6 +466,8 @@ class _DelayRanking extends StatelessWidget {
       });
     final completeDraws = ordered.first.completeDraws;
     final maxDelay = ordered.first.delay(firstPrizeOnly: firstPrizeOnly);
+    final accent = firstPrizeOnly ? GphTheme.head : GphTheme.delay;
+    final background = firstPrizeOnly ? GphTheme.headSoft : GphTheme.delaySoft;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,6 +479,8 @@ class _DelayRanking extends StatelessWidget {
                 label: 'Extrações completas',
                 value: '$completeDraws',
                 icon: Icons.fact_check_rounded,
+                accent: accent,
+                background: background,
               ),
             ),
             const SizedBox(width: 10),
@@ -411,6 +489,8 @@ class _DelayRanking extends StatelessWidget {
                 label: 'Maior atraso atual',
                 value: '$maxDelay ext.',
                 icon: Icons.hourglass_bottom_rounded,
+                accent: accent,
+                background: background,
               ),
             ),
           ],
@@ -432,6 +512,7 @@ class _DelayRanking extends StatelessWidget {
             position: index + 1,
             item: ordered[index],
             firstPrizeOnly: firstPrizeOnly,
+            accent: accent,
           ),
         ),
       ],
@@ -440,10 +521,15 @@ class _DelayRanking extends StatelessWidget {
 }
 
 class _FrequencyRow extends StatelessWidget {
-  const _FrequencyRow({required this.position, required this.item});
+  const _FrequencyRow({
+    required this.position,
+    required this.item,
+    required this.accent,
+  });
 
   final int position;
   final FrequencyEntry item;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) => _AnimalRankingRow(
@@ -455,6 +541,7 @@ class _FrequencyRow extends StatelessWidget {
             : 'Última: ${_date(item.lastDate!)}${item.lastTime == null ? '' : ' • ${item.lastTime}'}',
         value: '${item.count}x',
         valueLabel: '${item.percentage.toStringAsFixed(1)}%',
+        accent: accent,
         onTap: () => showAnimalDetails(context, item.group),
       );
 }
@@ -464,11 +551,13 @@ class _DelayRow extends StatelessWidget {
     required this.position,
     required this.item,
     required this.firstPrizeOnly,
+    required this.accent,
   });
 
   final int position;
   final AnimalDelayEntry item;
   final bool firstPrizeOnly;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -484,6 +573,7 @@ class _DelayRow extends StatelessWidget {
           : 'Última: ${_date(last.date)} • ${last.draw} ${last.time} • ${last.prize}º',
       value: '$delay',
       valueLabel: 'extrações',
+      accent: accent,
       onTap: () => showAnimalDetails(context, item.group),
     );
   }
@@ -497,6 +587,7 @@ class _AnimalRankingRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.valueLabel,
+    required this.accent,
     required this.onTap,
   });
 
@@ -506,6 +597,7 @@ class _AnimalRankingRow extends StatelessWidget {
   final String subtitle;
   final String value;
   final String valueLabel;
+  final Color accent;
   final VoidCallback onTap;
 
   @override
@@ -561,10 +653,21 @@ class _AnimalRankingRow extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+                      Text(
+                        value,
+                        style: TextStyle(
+                          color: accent,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 17,
+                        ),
+                      ),
                       Text(
                         valueLabel,
-                        style: const TextStyle(color: GphTheme.primary, fontSize: 9, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: accent,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
@@ -579,26 +682,41 @@ class _AnimalRankingRow extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.label, required this.value, required this.icon});
+  const _SummaryCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accent,
+    required this.background,
+  });
 
   final String label;
   final String value;
   final IconData icon;
+  final Color accent;
+  final Color background;
 
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: GphTheme.surfaceRaised,
+          color: background,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(color: GphTheme.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 19, color: GphTheme.primary),
+            Icon(icon, size: 19, color: accent),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+            Text(
+              value,
+              style: TextStyle(
+                color: accent,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
             const SizedBox(height: 2),
             Text(label, style: const TextStyle(color: GphTheme.textMuted, fontSize: 10)),
           ],
