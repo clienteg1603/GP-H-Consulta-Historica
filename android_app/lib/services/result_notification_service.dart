@@ -1,4 +1,4 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 
 import '../models/history_result.dart';
 
@@ -10,25 +10,33 @@ class ResultNotificationService {
   static const String channelDescription =
       'Avisos quando o GP-H encontra novos resultados na atualização automática.';
 
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   Future<void> initialize() async {
     if (_initialized) return;
-    const settings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    await AwesomeNotifications().initialize(
+      null,
+      [
+        NotificationChannel(
+          channelKey: channelId,
+          channelName: channelName,
+          channelDescription: channelDescription,
+          importance: NotificationImportance.High,
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+        ),
+      ],
     );
-    await _plugin.initialize(settings);
     _initialized = true;
   }
 
   Future<bool> requestPermission() async {
     await initialize();
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (android == null) return true;
-    return await android.requestPermission() ?? false;
+    if (await AwesomeNotifications().isNotificationAllowed()) return true;
+    return AwesomeNotifications().requestPermissionToSendNotifications(
+      channelKey: channelId,
+    );
   }
 
   Future<void> showNewResults(List<HistoryResult> rows) async {
@@ -65,24 +73,16 @@ class ResultNotificationService {
         .map((row) => '${row.prize}º ${row.thousand} ${_titleCase(row.animal)}')
         .join(' • ');
 
-    final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        channelId,
-        channelName,
-        channelDescription: channelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
-        styleInformation: BigTextStyleInformation(body),
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: _notificationId(latest),
+        channelKey: channelId,
+        title: title,
+        body: body,
+        notificationLayout: NotificationLayout.BigText,
+        category: NotificationCategory.Status,
+        payload: const {'source': 'new-results'},
       ),
-    );
-
-    final id = _notificationId(latest);
-    await _plugin.show(
-      id,
-      title,
-      body,
-      details,
-      payload: 'new-results',
     );
   }
 
