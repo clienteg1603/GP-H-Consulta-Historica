@@ -4,6 +4,8 @@ import '../app_services.dart';
 import '../data/animals.dart';
 import '../models/animal.dart';
 import '../models/strong_number_stats.dart';
+import '../theme/animal_artwork.dart';
+import '../theme/gph_theme.dart';
 import 'number_details_sheet.dart';
 
 class StrongNumbersScreen extends StatefulWidget {
@@ -67,6 +69,7 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
   @override
   Widget build(BuildContext context) {
     final animal = _animal;
+
     return RefreshIndicator(
       onRefresh: _refresh,
       child: ListView(
@@ -77,16 +80,16 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF10213A), Color(0xFF0D1726)],
+                colors: [Color(0xFF122640), GphTheme.surfaceRaised],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF24405F)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: GphTheme.borderStrong),
             ),
             child: const Row(
               children: [
-                Icon(Icons.numbers_rounded, color: Color(0xFF7DB6FF), size: 29),
+                _HeaderIcon(),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -99,7 +102,7 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
                       SizedBox(height: 3),
                       Text(
                         'Ranking histórico por frequência. Toque em qualquer número para abrir sua ficha completa.',
-                        style: TextStyle(color: Color(0xFF9FB0C5), fontSize: 12),
+                        style: TextStyle(color: GphTheme.textSecondary, fontSize: 12, height: 1.35),
                       ),
                     ],
                   ),
@@ -112,17 +115,57 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
             key: ValueKey('strong-group-$_group'),
             initialValue: _group,
             isExpanded: true,
+            menuMaxHeight: 420,
             decoration: const InputDecoration(
               labelText: 'Bicho',
               prefixIcon: Icon(Icons.pets_rounded),
             ),
+            selectedItemBuilder: (context) => gphAnimals
+                .map(
+                  (item) => Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${item.group.toString().padLeft(2, '0')} • ${item.name}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                )
+                .toList(growable: false),
             items: gphAnimals
                 .map(
                   (item) => DropdownMenuItem<int>(
                     value: item.group,
-                    child: Text(
-                      '${item.group.toString().padLeft(2, '0')} • ${item.name}',
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 42,
+                          child: AnimalArtwork(
+                            group: item.group,
+                            borderRadius: 7,
+                            showGlow: false,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${item.group.toString().padLeft(2, '0')} • ${item.name}',
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                              Text(
+                                item.dozens,
+                                style: const TextStyle(color: GphTheme.textMuted, fontSize: 10),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -131,44 +174,44 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
           ),
           const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.all(13),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF0B1523),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: const Color(0xFF1C2B41)),
+              color: GphTheme.surface,
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(color: GphTheme.borderStrong),
             ),
             child: Row(
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF162A46),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    animal.group.toString().padLeft(2, '0'),
-                    style: const TextStyle(
-                      color: Color(0xFFBFD8FF),
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                    ),
+                SizedBox(
+                  width: 100,
+                  child: AnimalArtwork(
+                    group: animal.group,
+                    borderRadius: 12,
+                    showGlow: false,
                   ),
                 ),
-                const SizedBox(width: 11),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         animal.name,
-                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Dezenas do grupo: ${animal.dozens}',
-                        style: const TextStyle(color: Color(0xFF8296AD), fontSize: 11),
+                        'Grupo ${animal.group.toString().padLeft(2, '0')}',
+                        style: const TextStyle(
+                          color: GphTheme.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        animal.dozens,
+                        style: const TextStyle(color: GphTheme.textSecondary, fontSize: 11),
                       ),
                     ],
                   ),
@@ -213,6 +256,11 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
             children: StrongNumberKind.values
                 .map(
                   (kind) => ChoiceChip(
+                    avatar: Icon(
+                      _kindIcon(kind),
+                      size: 16,
+                      color: _kind == kind ? GphTheme.primary : GphTheme.textMuted,
+                    ),
                     label: Text(kind.label),
                     selected: _kind == kind,
                     onSelected: (_) => _changeKind(kind),
@@ -249,6 +297,32 @@ class _StrongNumbersScreenState extends State<StrongNumbersScreen> {
       ),
     );
   }
+
+  static IconData _kindIcon(StrongNumberKind kind) {
+    switch (kind) {
+      case StrongNumberKind.dozen:
+        return Icons.pin_rounded;
+      case StrongNumberKind.hundred:
+        return Icons.filter_3_rounded;
+      case StrongNumberKind.thousand:
+        return Icons.numbers_rounded;
+    }
+  }
+}
+
+class _HeaderIcon extends StatelessWidget {
+  const _HeaderIcon();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: GphTheme.primarySoft,
+          borderRadius: BorderRadius.circular(13),
+        ),
+        child: const Icon(Icons.numbers_rounded, color: GphTheme.primary, size: 25),
+      );
 }
 
 class _RankingPanel extends StatelessWidget {
@@ -304,14 +378,14 @@ class _RankingPanel extends StatelessWidget {
             if (rows.length > shown.length)
               Text(
                 'Top ${shown.length} de ${rows.length}',
-                style: const TextStyle(color: Color(0xFF7F94AD), fontSize: 11),
+                style: const TextStyle(color: GphTheme.textMuted, fontSize: 11),
               ),
           ],
         ),
         const SizedBox(height: 4),
         const Text(
           'Frequência, recência e histórico são descritivos. Toque numa linha para ver ocorrências e detalhes.',
-          style: TextStyle(color: Color(0xFF71869F), fontSize: 10),
+          style: TextStyle(color: GphTheme.textMuted, fontSize: 10, height: 1.3),
         ),
         const SizedBox(height: 10),
         ...List.generate(
@@ -338,18 +412,18 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1726),
+          color: GphTheme.surfaceRaised,
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: const Color(0xFF1C2B41)),
+          border: Border.all(color: GphTheme.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 19, color: const Color(0xFF79B4FF)),
+            Icon(icon, size: 19, color: GphTheme.primary),
             const SizedBox(height: 8),
             Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
             const SizedBox(height: 2),
-            Text(label, style: const TextStyle(color: Color(0xFF8296AD), fontSize: 10)),
+            Text(label, style: const TextStyle(color: GphTheme.textMuted, fontSize: 10)),
           ],
         ),
       );
@@ -378,9 +452,9 @@ class _NumberRow extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            color: const Color(0xFF0B1523),
+            color: GphTheme.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF1C2B41)),
+            border: Border.all(color: GphTheme.border),
           ),
           child: Row(
             children: [
@@ -388,21 +462,21 @@ class _NumberRow extends StatelessWidget {
                 width: 34,
                 child: Text(
                   '$positionº',
-                  style: const TextStyle(color: Color(0xFF6E86A1), fontWeight: FontWeight.w800),
+                  style: const TextStyle(color: GphTheme.textMuted, fontWeight: FontWeight.w800),
                 ),
               ),
               Container(
                 constraints: const BoxConstraints(minWidth: 62),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF162A46),
+                  color: GphTheme.primarySoft,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   item.value,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: Color(0xFFBFD8FF),
+                    color: Color(0xFFD7E9FF),
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
                   ),
@@ -422,7 +496,7 @@ class _NumberRow extends StatelessWidget {
                       '${item.lastDraw} • ${item.lastPrize}º prêmio',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Color(0xFF71869F), fontSize: 10),
+                      style: const TextStyle(color: GphTheme.textMuted, fontSize: 10),
                     ),
                   ],
                 ),
@@ -437,12 +511,12 @@ class _NumberRow extends StatelessWidget {
                   ),
                   const Text(
                     'ocorrências',
-                    style: TextStyle(color: Color(0xFF7DB6FF), fontSize: 9),
+                    style: TextStyle(color: GphTheme.primary, fontSize: 9),
                   ),
                 ],
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF536B85)),
+              const Icon(Icons.chevron_right_rounded, size: 18, color: GphTheme.textMuted),
             ],
           ),
         ),
@@ -460,7 +534,7 @@ class _LoadingBlock extends StatelessWidget {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 10),
-              Text('Calculando ranking...', style: TextStyle(color: Color(0xFF9FB0C5))),
+              Text('Calculando ranking...', style: TextStyle(color: GphTheme.textSecondary)),
             ],
           ),
         ),
@@ -469,6 +543,7 @@ class _LoadingBlock extends StatelessWidget {
 
 class _MessageCard extends StatelessWidget {
   const _MessageCard({required this.text});
+
   final String text;
 
   @override
@@ -476,11 +551,17 @@ class _MessageCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          color: const Color(0xFF0B1523),
+          color: GphTheme.surface,
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: const Color(0xFF1C2B41)),
+          border: Border.all(color: GphTheme.border),
         ),
-        child: Text(text, style: const TextStyle(color: Color(0xFF9FB0C5))),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded, color: GphTheme.textMuted, size: 20),
+            const SizedBox(width: 9),
+            Expanded(child: Text(text, style: const TextStyle(color: GphTheme.textSecondary))),
+          ],
+        ),
       );
 }
 
