@@ -31,6 +31,7 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
   late Future<List<AnimalDelayEntry>> _animalDelays;
 
   bool _syncing = false;
+  bool _syncFailed = false;
   SyncProgress? _progress;
   String? _syncMessage;
   _AnimalSort _sort = _AnimalSort.group;
@@ -57,6 +58,7 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
     if (_syncing) return;
     setState(() {
       _syncing = true;
+      _syncFailed = false;
       _progress = null;
       _syncMessage = null;
     });
@@ -71,6 +73,7 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
 
       setState(() {
         _reloadLocal();
+        _syncFailed = false;
         _syncMessage = result.initialLoad
             ? 'Primeira sincronização concluída. ${result.saved} prêmios processados.'
             : 'Atualização concluída. ${result.saved} prêmios processados.';
@@ -80,12 +83,16 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
       if (!mounted) return;
       setState(() {
         _reloadLocal();
+        _syncFailed = true;
         _syncMessage = error.message;
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
       if (!mounted) return;
-      setState(() => _syncMessage = 'Não foi possível sincronizar agora.');
+      setState(() {
+        _syncFailed = true;
+        _syncMessage = 'Não foi possível sincronizar agora.';
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Não foi possível sincronizar agora.')),
       );
@@ -109,6 +116,7 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
               syncing: _syncing,
               progress: _progress,
               message: _syncMessage,
+              messageIsError: _syncFailed,
               onSync: _sync,
             ),
           ),
@@ -116,11 +124,26 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
           FutureBuilder<List<HistoryResult>>(
             future: _latest,
             builder: (context, snapshot) {
-              final rows = snapshot.data ?? const <HistoryResult>[];
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const HomeInfoCard(text: 'Carregando último resultado...');
+                return const HomeInfoCard(
+                  text: 'Carregando último resultado...',
+                  icon: Icons.hourglass_top_rounded,
+                );
               }
-              if (rows.isEmpty) return const SizedBox.shrink();
+              if (snapshot.hasError) {
+                return const HomeInfoCard(
+                  text: 'Não foi possível carregar o último resultado agora.',
+                  icon: Icons.error_outline_rounded,
+                  accent: GphTheme.danger,
+                );
+              }
+              final rows = snapshot.data ?? const <HistoryResult>[];
+              if (rows.isEmpty) {
+                return const HomeInfoCard(
+                  text: 'Ainda não há resultados salvos. Prepare ou atualize o histórico acima.',
+                  icon: Icons.inbox_outlined,
+                );
+              }
               return LatestResultCard(rows: rows);
             },
           ),
@@ -133,12 +156,26 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
           FutureBuilder<DelaySummary>(
             future: _delays,
             builder: (context, snapshot) {
-              final summary = snapshot.data;
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const HomeInfoCard(text: 'Calculando atrasos...');
+                return const HomeInfoCard(
+                  text: 'Calculando atrasos...',
+                  icon: Icons.hourglass_bottom_rounded,
+                  accent: GphTheme.delay,
+                );
               }
+              if (snapshot.hasError) {
+                return const HomeInfoCard(
+                  text: 'Não foi possível calcular os atrasos agora.',
+                  icon: Icons.error_outline_rounded,
+                  accent: GphTheme.danger,
+                );
+              }
+              final summary = snapshot.data;
               if (summary == null || summary.isEmpty) {
-                return const HomeInfoCard(text: 'Prepare o histórico para calcular os atrasos.');
+                return const HomeInfoCard(
+                  text: 'Prepare o histórico para calcular os atrasos.',
+                  icon: Icons.info_outline_rounded,
+                );
               }
               return DelayStrip(summary: summary);
             },
@@ -186,6 +223,13 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
           FutureBuilder<List<AnimalDelayEntry>>(
             future: _animalDelays,
             builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const HomeInfoCard(
+                  text: 'Carregando os 25 bichos...',
+                  icon: Icons.pets_rounded,
+                );
+              }
+
               final delayByGroup = {
                 for (final item in snapshot.data ?? const <AnimalDelayEntry>[]) item.group: item,
               };
@@ -207,9 +251,23 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
                 });
               }
 
-              return AnimalExplorerGrid(
+              final grid = AnimalExplorerGrid(
                 animals: animals,
                 delayByGroup: delayByGroup,
+              );
+
+              if (!snapshot.hasError) return grid;
+
+              return Column(
+                children: [
+                  const HomeInfoCard(
+                    text: 'Os bichos foram carregados, mas não foi possível calcular os atrasos agora.',
+                    icon: Icons.error_outline_rounded,
+                    accent: GphTheme.danger,
+                  ),
+                  const SizedBox(height: 10),
+                  grid,
+                ],
               );
             },
           ),

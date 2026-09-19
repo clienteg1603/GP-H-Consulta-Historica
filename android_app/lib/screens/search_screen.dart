@@ -39,12 +39,17 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  void _clearResultState() {
+    _results = null;
+    _error = null;
+  }
+
   void _changeMode(String mode) {
+    if (_mode == mode) return;
     setState(() {
       _mode = mode;
       _queryController.clear();
-      _results = null;
-      _error = null;
+      _clearResultState();
     });
   }
 
@@ -57,24 +62,44 @@ class _SearchScreenState extends State<SearchScreen> {
           ? DateTimeRange(start: _start!, end: _end!)
           : null,
     );
-    if (range != null) {
+    if (range != null && mounted) {
       setState(() {
         _start = range.start;
         _end = range.end;
+        _clearResultState();
       });
     }
+  }
+
+  void _changePrize(int? value) {
+    setState(() {
+      _prize = value;
+      _clearResultState();
+    });
+  }
+
+  void _changeDraw(String? value) {
+    setState(() {
+      _draw = value;
+      _clearResultState();
+    });
   }
 
   Future<void> _search() async {
     final query = _queryController.text.trim();
     if (query.isEmpty) {
-      setState(() => _error = 'Escolha ou digite um valor para pesquisar.');
+      setState(() {
+        _results = null;
+        _error = 'Escolha ou digite um valor para pesquisar.';
+      });
       return;
     }
+
     setState(() {
       _loading = true;
       _error = null;
     });
+
     try {
       final rows = await AppServices.history.search(
         mode: _mode,
@@ -88,7 +113,10 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() => _results = rows);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Não foi possível executar a pesquisa.');
+      setState(() {
+        _results = null;
+        _error = 'Não foi possível executar a pesquisa.';
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -100,8 +128,7 @@ class _SearchScreenState extends State<SearchScreen> {
       _end = null;
       _prize = null;
       _draw = null;
-      _results = null;
-      _error = null;
+      _clearResultState();
     });
   }
 
@@ -147,7 +174,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     SizedBox(height: 3),
                     Text(
                       'Encontre uma ocorrência e refine por período, prêmio e sorteio.',
-                      style: TextStyle(color: GphTheme.textSecondary, fontSize: 12, height: 1.35),
+                      style: TextStyle(
+                        color: GphTheme.textSecondary,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
                     ),
                   ],
                 ),
@@ -165,14 +196,13 @@ class _SearchScreenState extends State<SearchScreen> {
           spacing: 7,
           runSpacing: 7,
           children: modes.map((mode) {
-            final selected = _mode == mode;
             return _ModeChoice(
               label: mode,
               icon: _iconForMode(mode),
-              selected: selected,
+              selected: _mode == mode,
               onTap: () => _changeMode(mode),
             );
-          }).toList(),
+          }).toList(growable: false),
         ),
         const SizedBox(height: 15),
         if (_mode == 'Bicho')
@@ -192,12 +222,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '${animal.group.toString().padLeft(2, '0')} • ${animal.name}',
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                   ),
                 )
-                .toList(),
+                .toList(growable: false),
             items: gphAnimals
                 .map(
                   (animal) => DropdownMenuItem<String>(
@@ -220,12 +251,18 @@ class _SearchScreenState extends State<SearchScreen> {
                             children: [
                               Text(
                                 '${animal.group.toString().padLeft(2, '0')} • ${animal.name}',
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontWeight: FontWeight.w800),
                               ),
                               Text(
                                 animal.dozens,
-                                style: const TextStyle(color: GphTheme.textMuted, fontSize: 10),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: GphTheme.textMuted,
+                                  fontSize: 10,
+                                ),
                               ),
                             ],
                           ),
@@ -234,12 +271,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
                 )
-                .toList(),
+                .toList(growable: false),
             onChanged: (value) {
               setState(() {
                 _queryController.text = value ?? '';
-                _results = null;
-                _error = null;
+                _clearResultState();
               });
             },
           )
@@ -250,12 +286,7 @@ class _SearchScreenState extends State<SearchScreen> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textInputAction: TextInputAction.search,
             onChanged: (_) {
-              if (_error != null || _results != null) {
-                setState(() {
-                  _error = null;
-                  _results = null;
-                });
-              }
+              setState(_clearResultState);
             },
             onSubmitted: (_) => _search(),
             decoration: InputDecoration(
@@ -270,8 +301,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       onPressed: () {
                         setState(() {
                           _queryController.clear();
-                          _results = null;
-                          _error = null;
+                          _clearResultState();
                         });
                       },
                       icon: const Icon(Icons.close_rounded),
@@ -290,8 +320,8 @@ class _SearchScreenState extends State<SearchScreen> {
           drawOptions: _drawOptions,
           periodLabel: _periodLabel(),
           hasPeriod: _start != null || _end != null,
-          onPrizeChanged: (value) => setState(() => _prize = value),
-          onDrawChanged: (value) => setState(() => _draw = value),
+          onPrizeChanged: _changePrize,
+          onDrawChanged: _changeDraw,
           onPickPeriod: _pickPeriod,
           onClear: _clearFilters,
         ),
@@ -312,20 +342,10 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0x241F2937),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0x668B3A46)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.error_outline_rounded, size: 18, color: GphTheme.danger),
-                const SizedBox(width: 8),
-                Expanded(child: Text(_error!, style: const TextStyle(color: GphTheme.danger))),
-              ],
-            ),
+          _StatusCard(
+            text: _error!,
+            icon: Icons.error_outline_rounded,
+            accent: GphTheme.danger,
           ),
         ],
         const SizedBox(height: 22),
@@ -419,7 +439,11 @@ class _ModeChoice extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 16, color: selected ? GphTheme.primary : GphTheme.textMuted),
+                Icon(
+                  icon,
+                  size: 16,
+                  color: selected ? GphTheme.primary : GphTheme.textMuted,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   label,
@@ -464,34 +488,59 @@ class _AnimalSelectionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: GphTheme.borderStrong),
         ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 92,
-              child: AnimalArtwork(group: animal.group, borderRadius: 11, showGlow: false),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    animal.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Grupo ${animal.group.toString().padLeft(2, '0')}',
-                    style: const TextStyle(color: GphTheme.primary, fontSize: 11, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(animal.dozens, style: const TextStyle(color: GphTheme.textSecondary, fontSize: 11)),
-                ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 320;
+            final art = SizedBox(
+              width: compact ? 78 : 92,
+              child: AnimalArtwork(
+                group: animal.group,
+                borderRadius: 11,
+                showGlow: false,
               ),
-            ),
-          ],
+            );
+            final info = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  animal.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Grupo ${animal.group.toString().padLeft(2, '0')}',
+                  style: const TextStyle(
+                    color: GphTheme.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  animal.dozens,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: GphTheme.textSecondary, fontSize: 11),
+                ),
+              ],
+            );
+
+            if (compact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [art, const SizedBox(height: 8), info],
+              );
+            }
+            return Row(
+              children: [
+                art,
+                const SizedBox(width: 12),
+                Expanded(child: info),
+              ],
+            );
+          },
         ),
       );
 }
@@ -549,20 +598,24 @@ class _FilterCard extends StatelessWidget {
           key: ValueKey('draw-${draw ?? ''}'),
           initialValue: selected,
           isExpanded: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Sorteio',
-            prefixIcon: Icon(Icons.schedule_rounded),
+            prefixIcon: const Icon(Icons.schedule_rounded),
+            helperText: snapshot.hasError ? 'Lista indisponível' : null,
+            helperStyle: const TextStyle(color: GphTheme.danger, fontSize: 9),
           ),
           items: [
             const DropdownMenuItem<String>(value: '', child: Text('Todos')),
             ...options.map(
               (value) => DropdownMenuItem<String>(
                 value: value,
-                child: Text(value, overflow: TextOverflow.ellipsis),
+                child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ),
           ],
-          onChanged: (value) => onDrawChanged(value == null || value.isEmpty ? null : value),
+          onChanged: snapshot.hasError
+              ? null
+              : (value) => onDrawChanged(value == null || value.isEmpty ? null : value),
         );
       },
     );
@@ -641,6 +694,42 @@ class _FilterCard extends StatelessWidget {
   }
 }
 
+class _StatusCard extends StatelessWidget {
+  const _StatusCard({
+    required this.text,
+    required this.icon,
+    this.accent = GphTheme.textMuted,
+  });
+
+  final String text;
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: GphTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: GphTheme.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: accent, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(color: GphTheme.textSecondary, height: 1.3),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
 class _ResultsPanel extends StatelessWidget {
   const _ResultsPanel({required this.results});
 
@@ -649,14 +738,27 @@ class _ResultsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = results;
-    if (rows == null) return _box('Faça uma consulta para ver as ocorrências.', Icons.search_rounded);
-    if (rows.isEmpty) return _box('Nenhuma ocorrência encontrada com esses filtros.', Icons.search_off_rounded);
+    if (rows == null) {
+      return const _StatusCard(
+        text: 'Faça uma consulta para ver as ocorrências.',
+        icon: Icons.search_rounded,
+      );
+    }
+    if (rows.isEmpty) {
+      return const _StatusCard(
+        text: 'Nenhuma ocorrência encontrada com esses filtros.',
+        icon: Icons.search_off_rounded,
+      );
+    }
 
     final grouped = <String, List<HistoryResult>>{};
     for (final row in rows) {
       final key = '${row.date}|${row.time}|${row.draw}';
       grouped.putIfAbsent(key, () => []).add(row);
     }
+
+    final occurrenceLabel = rows.length == 1 ? 'ocorrência' : 'ocorrências';
+    final drawLabel = grouped.length == 1 ? 'extração' : 'extrações';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,11 +778,12 @@ class _ResultsPanel extends StatelessWidget {
             const SizedBox(width: 9),
             Expanded(
               child: Text(
-                '${rows.length} ocorrência${rows.length == 1 ? '' : 's'} em ${grouped.length} extração${grouped.length == 1 ? '' : 'ões'}',
+                '${rows.length} $occurrenceLabel em ${grouped.length} $drawLabel',
                 style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
               ),
             ),
-            if (rows.length >= 250)
+            if (rows.length >= 250) ...[
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 decoration: BoxDecoration(
@@ -692,6 +795,7 @@ class _ResultsPanel extends StatelessWidget {
                   style: TextStyle(color: GphTheme.textMuted, fontSize: 10),
                 ),
               ),
+            ],
           ],
         ),
         const SizedBox(height: 11),
@@ -704,23 +808,6 @@ class _ResultsPanel extends StatelessWidget {
       ],
     );
   }
-
-  Widget _box(String text, IconData icon) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(17),
-        decoration: BoxDecoration(
-          color: GphTheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: GphTheme.border),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: GphTheme.textMuted, size: 20),
-            const SizedBox(width: 10),
-            Expanded(child: Text(text, style: const TextStyle(color: GphTheme.textSecondary))),
-          ],
-        ),
-      );
 }
 
 class _ResultDrawCard extends StatelessWidget {
@@ -757,7 +844,11 @@ class _ResultDrawCard extends StatelessWidget {
                 ),
                 child: Text(
                   first.draw,
-                  style: const TextStyle(color: GphTheme.primary, fontSize: 10, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    color: GphTheme.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -782,8 +873,13 @@ class _ResultDrawCard extends StatelessWidget {
                     child: Text(row.thousand, style: const TextStyle(fontWeight: FontWeight.w900)),
                   ),
                   Expanded(
-                    child: Text(row.animal, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      _titleCase(row.animal),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  const SizedBox(width: 5),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
@@ -792,7 +888,11 @@ class _ResultDrawCard extends StatelessWidget {
                     ),
                     child: Text(
                       'G${row.group.toString().padLeft(2, '0')}',
-                      style: const TextStyle(color: GphTheme.primary, fontSize: 10, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        color: GphTheme.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 ],
@@ -803,10 +903,16 @@ class _ResultDrawCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  static String _date(String iso) {
-    final parts = iso.split('-');
-    if (parts.length != 3) return iso;
-    return '${parts[2]}/${parts[1]}/${parts[0]}';
-  }
+String _date(String iso) {
+  final parts = iso.split('-');
+  if (parts.length != 3) return iso;
+  return '${parts[2]}/${parts[1]}/${parts[0]}';
+}
+
+String _titleCase(String value) {
+  final trimmed = value.trim().toLowerCase();
+  if (trimmed.isEmpty) return value;
+  return '${trimmed[0].toUpperCase()}${trimmed.substring(1)}';
 }
