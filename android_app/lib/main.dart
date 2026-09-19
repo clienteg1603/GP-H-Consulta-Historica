@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_services.dart';
 import 'screens/games_screen.dart';
-import 'screens/home_explorer_screen.dart';
+import 'screens/home_visual_screen.dart';
 import 'screens/numbers_hub_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/stats_screen.dart';
@@ -40,7 +40,7 @@ class _GphShellState extends State<GphShell> {
   bool _checkingUpdate = false;
 
   static const _pages = <Widget>[
-    HomeExplorerScreen(),
+    HomeVisualScreen(),
     GamesScreen(),
     SearchScreen(),
     StatsScreen(),
