@@ -231,6 +231,20 @@ class HistoryRepository {
   Future<void> saveLastSync(DateTime value) =>
       _database.setSyncValue('last_sync_at', value.toIso8601String());
 
+  Future<String?> setting(String key) => _database.getSyncValue(key);
+
+  Future<void> saveSetting(String key, String? value) =>
+      _database.setSyncValue(key, value);
+
+  Future<bool> boolSetting(String key, {bool defaultValue = false}) async {
+    final value = await setting(key);
+    if (value == null) return defaultValue;
+    return value == '1' || value.toLowerCase() == 'true';
+  }
+
+  Future<void> saveBoolSetting(String key, bool value) =>
+      saveSetting(key, value ? '1' : '0');
+
   static int _asInt(Object? value) {
     if (value is int) return value;
     return int.tryParse(value?.toString() ?? '') ?? 0;
