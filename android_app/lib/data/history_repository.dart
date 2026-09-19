@@ -1,3 +1,5 @@
+export '../models/frequency_stats.dart' show AnimalOverview;
+
 import '../models/animal_delay_stats.dart';
 import '../models/delay_summary.dart';
 import '../models/frequency_stats.dart';

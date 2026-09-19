@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../app_services.dart';
 import '../models/history_result.dart';
 import '../services/history_sync_service.dart';
+import '../theme/animal_artwork.dart';
+import '../theme/gph_theme.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -85,31 +87,35 @@ class _GamesScreenState extends State<GamesScreen> {
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
         children: [
           Container(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF10213A), Color(0xFF0D1726)],
+                colors: [Color(0xFF122640), GphTheme.surfaceRaised],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF24405F)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: GphTheme.borderStrong),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF173253),
-                    borderRadius: BorderRadius.circular(12),
+                    color: GphTheme.primarySoft,
+                    borderRadius: BorderRadius.circular(13),
                   ),
-                  child: const Icon(Icons.calendar_month_rounded, color: Color(0xFF7DB6FF)),
+                  child: const Icon(
+                    Icons.calendar_month_rounded,
+                    color: GphTheme.primary,
+                    size: 24,
+                  ),
                 ),
-                const SizedBox(width: 11),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,25 +125,29 @@ class _GamesScreenState extends State<GamesScreen> {
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 3),
-                      Text(_displayDate(_date), style: const TextStyle(color: Color(0xFF9FB0C5))),
+                      Text(
+                        _displayDate(_date),
+                        style: const TextStyle(color: GphTheme.textSecondary, fontWeight: FontWeight.w700),
+                      ),
                     ],
                   ),
                 ),
-                IconButton(
+                IconButton.filledTonal(
                   tooltip: 'Escolher data',
                   onPressed: _pickDate,
-                  icon: const Icon(Icons.edit_calendar_rounded),
+                  icon: const Icon(Icons.edit_calendar_rounded, size: 20),
                 ),
-                IconButton(
+                const SizedBox(width: 5),
+                IconButton.filledTonal(
                   tooltip: 'Atualizar resultados',
                   onPressed: _syncing ? null : _syncAndReload,
                   icon: _syncing
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 19,
+                          height: 19,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.sync_rounded),
+                      : const Icon(Icons.sync_rounded, size: 20),
                 ),
               ],
             ),
@@ -153,9 +163,10 @@ class _GamesScreenState extends State<GamesScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton.tonal(
+              FilledButton.tonalIcon(
                 onPressed: _isToday ? null : () => _changeDate(DateTime.now()),
-                child: const Text('Hoje'),
+                icon: const Icon(Icons.today_rounded, size: 17),
+                label: const Text('Hoje'),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -225,11 +236,17 @@ class _GamesScreenState extends State<GamesScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xFF0B1523),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF1C2B41)),
+          color: GphTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: GphTheme.border),
         ),
-        child: Text(text, style: const TextStyle(color: Color(0xFF9FB0C5))),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded, color: GphTheme.textMuted, size: 20),
+            const SizedBox(width: 10),
+            Expanded(child: Text(text, style: const TextStyle(color: GphTheme.textSecondary))),
+          ],
+        ),
       );
 
   String _displayDate(DateTime value) =>
@@ -250,11 +267,11 @@ class _DaySummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1726),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF1C2B41)),
+        color: GphTheme.surfaceRaised,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: GphTheme.border),
       ),
       child: Row(
         children: [
@@ -280,8 +297,8 @@ class _SummaryValue extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Text(value, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
-          Text(label, style: const TextStyle(color: Color(0xFF7F94AD), fontSize: 11)),
+          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          Text(label, style: const TextStyle(color: GphTheme.textMuted, fontSize: 10)),
         ],
       ),
     );
@@ -293,7 +310,7 @@ class _SummaryDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 30, color: const Color(0xFF1C2B41));
+    return Container(width: 1, height: 30, color: GphTheme.border);
   }
 }
 
@@ -308,12 +325,13 @@ class _DrawCard extends StatelessWidget {
     final first = ordered.first;
     final prizes = ordered.map((row) => row.prize).toSet();
     final complete = {1, 2, 3, 4, 5}.every(prizes.contains);
+
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1523),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1C2B41)),
+        color: GphTheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: GphTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,10 +341,13 @@ class _DrawCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF162A46),
+                  color: GphTheme.primarySoft,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(first.time, style: const TextStyle(fontWeight: FontWeight.w900)),
+                child: Text(
+                  first.time,
+                  style: const TextStyle(color: GphTheme.primary, fontWeight: FontWeight.w900),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -345,7 +366,7 @@ class _DrawCard extends StatelessWidget {
                 child: Text(
                   complete ? 'Completa' : '${ordered.length}/5',
                   style: TextStyle(
-                    color: complete ? const Color(0xFF86EFAC) : const Color(0xFFFCD34D),
+                    color: complete ? GphTheme.success : GphTheme.warning,
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                   ),
@@ -353,7 +374,7 @@ class _DrawCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 11),
+          const SizedBox(height: 10),
           ...ordered.map((row) => _PrizeRow(row: row)),
         ],
       ),
@@ -371,29 +392,64 @@ class _PrizeRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         onTap: () => _showDetails(context),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 5),
+          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 7),
+          decoration: BoxDecoration(
+            color: GphTheme.surfaceRaised,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Row(
             children: [
               SizedBox(
-                width: 34,
-                child: Text('${row.prize}º', style: const TextStyle(color: Color(0xFF7F94AD))),
+                width: 30,
+                child: Text(
+                  '${row.prize}º',
+                  style: const TextStyle(color: GphTheme.textMuted, fontWeight: FontWeight.w700),
+                ),
               ),
               SizedBox(
-                width: 62,
-                child: Text(row.thousand, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                width: 50,
+                child: AnimalArtwork(
+                  group: row.group,
+                  borderRadius: 9,
+                  showGlow: false,
+                ),
               ),
+              const SizedBox(width: 9),
               Expanded(
-                child: Text(row.animal, overflow: TextOverflow.ellipsis),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      row.thousand,
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      row.animal,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: GphTheme.textSecondary, fontSize: 11),
+                    ),
+                  ],
+                ),
               ),
-              Text(
-                'G${row.group.toString().padLeft(2, '0')}',
-                style: const TextStyle(color: Color(0xFF9FB0C5)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: GphTheme.primarySoft,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'G${row.group.toString().padLeft(2, '0')}',
+                  style: const TextStyle(color: GphTheme.primary, fontSize: 10, fontWeight: FontWeight.w900),
+                ),
               ),
-              const SizedBox(width: 3),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF52677F), size: 19),
+              const SizedBox(width: 2),
+              const Icon(Icons.chevron_right_rounded, color: GphTheme.textMuted, size: 19),
             ],
           ),
         ),
@@ -404,32 +460,55 @@ class _PrizeRow extends StatelessWidget {
   Future<void> _showDetails(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0D1726),
-      showDragHandle: true,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${row.prize}º prêmio • ${row.draw}',
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${_date(row.date)} • ${row.time}',
-              style: const TextStyle(color: Color(0xFF9FB0C5)),
-            ),
-            const SizedBox(height: 18),
-            _DetailLine(label: 'Milhar', value: row.thousand),
-            _DetailLine(label: 'Centena', value: row.hundred),
-            _DetailLine(label: 'Dezena', value: row.ten),
-            _DetailLine(
-              label: 'Grupo',
-              value: '${row.group.toString().padLeft(2, '0')} • ${row.animal}',
-            ),
-          ],
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: AnimalArtwork(group: row.group, borderRadius: 14),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          row.animal,
+                          style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${row.prize}º prêmio • ${row.draw}',
+                          style: const TextStyle(color: GphTheme.textSecondary, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${_date(row.date)} • ${row.time}',
+                          style: const TextStyle(color: GphTheme.textMuted, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _DetailLine(label: 'Milhar', value: row.thousand),
+              _DetailLine(label: 'Centena', value: row.hundred),
+              _DetailLine(label: 'Dezena', value: row.ten),
+              _DetailLine(
+                label: 'Grupo',
+                value: '${row.group.toString().padLeft(2, '0')} • ${row.animal}',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -450,16 +529,24 @@ class _DetailLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: GphTheme.surface,
+        borderRadius: BorderRadius.circular(11),
+      ),
       child: Row(
         children: [
           SizedBox(
             width: 78,
-            child: Text(label, style: const TextStyle(color: Color(0xFF7F94AD))),
+            child: Text(label, style: const TextStyle(color: GphTheme.textMuted)),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ),
           ),
         ],
       ),

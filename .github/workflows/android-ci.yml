@@ -38,9 +38,12 @@ jobs:
             --project-name gph_consulta_android \
             /tmp/gph_android_ci
           cp android_app/pubspec.yaml /tmp/gph_android_ci/pubspec.yaml
-          rm -rf /tmp/gph_android_ci/lib /tmp/gph_android_ci/test
+          rm -rf /tmp/gph_android_ci/lib /tmp/gph_android_ci/test /tmp/gph_android_ci/assets
           cp -R android_app/lib /tmp/gph_android_ci/lib
           cp -R android_app/test /tmp/gph_android_ci/test
+          if [ -d android_app/assets ]; then
+            cp -R android_app/assets /tmp/gph_android_ci/assets
+          fi
 
       - name: Dependências
         working-directory: /tmp/gph_android_ci
