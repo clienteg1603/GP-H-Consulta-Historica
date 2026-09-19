@@ -1,0 +1,111 @@
+name: Android publish download
+
+on:
+  workflow_run:
+    workflows:
+      - Android release online
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish-download:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout da versão publicada
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Ler versão Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          FULL_VERSION="$(awk '/^version:/ {print $2; exit}' android_app/pubspec.yaml)"
+          VERSION="${FULL_VERSION%%+*}"
+          BUILD="${FULL_VERSION##*+}"
+          echo "GPH_VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "GPH_BUILD=${BUILD}" >> "$GITHUB_ENV"
+          echo "GPH_TAG=android-alpha-${BUILD}" >> "$GITHUB_ENV"
+          echo "GPH_APK_NAME=GP-H_Consulta_Historica_Android.apk" >> "$GITHUB_ENV"
+
+      - name: Baixar APK já validado
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/gph-release
+          gh run download "$RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name GP-H_Consulta_Historica_Android_release \
+            --dir /tmp/gph-release
+          test -s "/tmp/gph-release/$GPH_APK_NAME"
+
+      - name: Publicar APK em GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GPH_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GPH_TAG" "/tmp/gph-release/$GPH_APK_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create "$GPH_TAG" "/tmp/gph-release/$GPH_APK_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "GP-H Android Alpha $GPH_BUILD — v$GPH_VERSION" \
+              --notes-file android_app/release_notes.txt \
+              --prerelease
+          fi
+          DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GPH_TAG}/${GPH_APK_NAME}"
+          echo "GPH_DOWNLOAD_URL=${DOWNLOAD_URL}" >> "$GITHUB_ENV"
+
+      - name: Verificar download público
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --range 0-1023 "$GPH_DOWNLOAD_URL" -o /tmp/download-check.bin
+          test -s /tmp/download-check.bin
+
+      - name: Trocar manifesto para o download da Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin android-release
+          rm -rf /tmp/gph-android-release
+          git worktree add /tmp/gph-android-release origin/android-release
+          cd /tmp/gph-android-release
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path('latest.json')
+          manifest = json.loads(path.read_text(encoding='utf-8'))
+          expected_build = int(os.environ['GPH_BUILD'])
+          expected_version = os.environ['GPH_VERSION']
+          if int(manifest.get('build', 0)) != expected_build:
+              raise SystemExit('O manifesto publicado não corresponde ao build desta execução.')
+          if str(manifest.get('version', '')) != expected_version:
+              raise SystemExit('O manifesto publicado não corresponde à versão desta execução.')
+          manifest['url'] = os.environ['GPH_DOWNLOAD_URL']
+          path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          git checkout -B android-release origin/android-release
+          git add latest.json
+          if git diff --cached --quiet; then
+            echo "Manifesto já aponta para a Release."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Android release: usa download do GitHub Release"
+          git push origin HEAD:android-release
