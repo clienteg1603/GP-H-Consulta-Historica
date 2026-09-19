@@ -141,6 +141,8 @@ class _AnimalCard extends StatelessWidget {
                             child: _MiniMetric(
                               label: '1º–5º',
                               value: delay == null ? '—' : '${delay!.delayAny}',
+                              accent: GphTheme.delay,
+                              background: GphTheme.delaySoft,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -148,6 +150,8 @@ class _AnimalCard extends StatelessWidget {
                             child: _MiniMetric(
                               label: 'Cabeça',
                               value: delay == null ? '—' : '${delay!.delayHead}',
+                              accent: GphTheme.head,
+                              background: GphTheme.headSoft,
                             ),
                           ),
                         ],
@@ -165,22 +169,36 @@ class _AnimalCard extends StatelessWidget {
 }
 
 class _MiniMetric extends StatelessWidget {
-  const _MiniMetric({required this.label, required this.value});
+  const _MiniMetric({
+    required this.label,
+    required this.value,
+    required this.accent,
+    required this.background,
+  });
 
   final String label;
   final String value;
+  final Color accent;
+  final Color background;
 
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
         decoration: BoxDecoration(
-          color: GphTheme.surface,
+          color: background,
           borderRadius: BorderRadius.circular(9),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+            Text(
+              value,
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
+              ),
+            ),
             Text(label, style: const TextStyle(color: GphTheme.textMuted, fontSize: 9)),
           ],
         ),
@@ -244,15 +262,36 @@ Future<void> showAnimalDetails(BuildContext context, int group) async {
                     children: [
                       Expanded(child: _DetailMetric(label: 'Aparições 1º–5º', value: '${info.totalAppearances}x')),
                       const SizedBox(width: 8),
-                      Expanded(child: _DetailMetric(label: 'Cabeças 1º', value: '${info.firstPrizeAppearances}x')),
+                      Expanded(
+                        child: _DetailMetric(
+                          label: 'Cabeças 1º',
+                          value: '${info.firstPrizeAppearances}x',
+                          accent: GphTheme.head,
+                          background: GphTheme.headSoft,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Expanded(child: _DetailMetric(label: 'Atraso 1º–5º', value: '${info.delayAny}')),
+                      Expanded(
+                        child: _DetailMetric(
+                          label: 'Atraso 1º–5º',
+                          value: '${info.delayAny}',
+                          accent: GphTheme.delay,
+                          background: GphTheme.delaySoft,
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Expanded(child: _DetailMetric(label: 'Atraso cabeça', value: '${info.delayHead}')),
+                      Expanded(
+                        child: _DetailMetric(
+                          label: 'Atraso cabeça',
+                          value: '${info.delayHead}',
+                          accent: GphTheme.head,
+                          background: GphTheme.headSoft,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -287,23 +326,37 @@ Future<void> showAnimalDetails(BuildContext context, int group) async {
 }
 
 class _DetailMetric extends StatelessWidget {
-  const _DetailMetric({required this.label, required this.value});
+  const _DetailMetric({
+    required this.label,
+    required this.value,
+    this.accent = GphTheme.textPrimary,
+    this.background = GphTheme.surface,
+  });
 
   final String label;
   final String value;
+  final Color accent;
+  final Color background;
 
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: GphTheme.surface,
+          color: background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: GphTheme.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            Text(
+              value,
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+              ),
+            ),
             Text(label, style: const TextStyle(color: GphTheme.textMuted, fontSize: 10)),
           ],
         ),
