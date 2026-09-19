@@ -19,7 +19,7 @@ class AnimalArtwork extends StatelessWidget {
   final double borderRadius;
   final bool showGlow;
 
-  static const String _sheetAsset = 'assets/animals/cartoon_sheet.jpg';
+  static const String _sheetAsset = 'lib/assets/animals/cartoon_sheet.jpg';
   static const double _cellAspectRatio = 250 / 146;
 
   @override
