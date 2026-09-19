@@ -6,9 +6,11 @@ import '../data/history_repository.dart';
 import '../models/animal_delay_stats.dart';
 import '../models/delay_summary.dart';
 import '../models/history_result.dart';
+import '../services/background_sync_service.dart';
 import '../services/history_sync_service.dart';
 import '../theme/gph_theme.dart';
 import 'widgets/animal_explorer_widgets.dart';
+import 'widgets/background_sync_card.dart';
 import 'widgets/home_overview_widgets.dart';
 
 enum _AnimalSort { group, delayAny, delayHead }
@@ -36,10 +38,15 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
   String? _syncMessage;
   _AnimalSort _sort = _AnimalSort.group;
 
+  BackgroundSyncConfig? _backgroundConfig;
+  bool _backgroundConfigLoading = true;
+  bool _backgroundConfigSaving = false;
+
   @override
   void initState() {
     super.initState();
     _reloadLocal();
+    _initializeBackgroundSync();
   }
 
   void _reloadLocal() {
@@ -49,9 +56,105 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
     _animalDelays = AppServices.history.animalDelays();
   }
 
+  Future<void> _initializeBackgroundSync() async {
+    try {
+      await AppServices.background.ensureScheduled();
+      final config = await AppServices.background.config();
+      if (!mounted) return;
+      setState(() {
+        _backgroundConfig = config;
+        _backgroundConfigLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _backgroundConfigLoading = false);
+    }
+  }
+
+  Future<void> _reloadBackgroundConfig() async {
+    final config = await AppServices.background.config();
+    if (!mounted) return;
+    setState(() {
+      _backgroundConfig = config;
+      _backgroundConfigLoading = false;
+    });
+  }
+
+  Future<void> _setAutomaticSync(bool enabled) async {
+    if (_backgroundConfigSaving) return;
+    setState(() => _backgroundConfigSaving = true);
+    try {
+      if (enabled) {
+        final summary = await AppServices.history.summary();
+        if (summary.isEmpty) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Prepare o histórico antes de ativar a atualização automática.'),
+            ),
+          );
+          return;
+        }
+      }
+
+      await AppServices.background.setEnabled(enabled);
+      await _reloadBackgroundConfig();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            enabled
+                ? 'Atualização automática ativada.'
+                : 'Atualização automática desativada.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível alterar a atualização automática agora.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _backgroundConfigSaving = false);
+    }
+  }
+
+  Future<void> _setResultNotifications(bool enabled) async {
+    if (_backgroundConfigSaving) return;
+    setState(() => _backgroundConfigSaving = true);
+    try {
+      if (enabled) {
+        final granted = await AppServices.notifications.requestPermission();
+        if (!granted) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Permita as notificações do GP-H no Android para receber os avisos.',
+              ),
+            ),
+          );
+          return;
+        }
+      }
+      await AppServices.background.setNotificationsEnabled(enabled);
+      await _reloadBackgroundConfig();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível alterar as notificações agora.')),
+      );
+    } finally {
+      if (mounted) setState(() => _backgroundConfigSaving = false);
+    }
+  }
+
   Future<void> _refresh() async {
     setState(_reloadLocal);
     await Future.wait([_summary, _latest, _delays, _animalDelays]);
+    await _reloadBackgroundConfig();
   }
 
   Future<void> _sync() async {
@@ -119,6 +222,14 @@ class _HomeVisualScreenState extends State<HomeVisualScreen> {
               messageIsError: _syncFailed,
               onSync: _sync,
             ),
+          ),
+          const SizedBox(height: 12),
+          BackgroundSyncCard(
+            config: _backgroundConfig,
+            loading: _backgroundConfigLoading,
+            saving: _backgroundConfigSaving,
+            onAutoChanged: _setAutomaticSync,
+            onNotificationsChanged: _setResultNotifications,
           ),
           const SizedBox(height: 14),
           FutureBuilder<List<HistoryResult>>(

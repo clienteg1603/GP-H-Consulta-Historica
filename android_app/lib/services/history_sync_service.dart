@@ -54,7 +54,10 @@ class HistorySyncService {
   final HistoryRepository _repository;
   final http.Client _client;
 
-  Future<SyncResult> sync({void Function(SyncProgress progress)? onProgress}) async {
+  Future<SyncResult> sync({
+    void Function(SyncProgress progress)? onProgress,
+    int recentLookbackDays = 7,
+  }) async {
     final summary = await _repository.summary();
     final today = _dateOnly(DateTime.now());
     final firstLoad = summary.isEmpty ||
@@ -75,7 +78,8 @@ class HistorySyncService {
       }
     } else {
       final last = summary.lastDate == null ? today : DateTime.parse(summary.lastDate!);
-      start = _dateOnly(last.subtract(const Duration(days: 7)));
+      final lookback = recentLookbackDays < 0 ? 0 : recentLookbackDays;
+      start = _dateOnly(last.subtract(Duration(days: lookback)));
       if (start.isBefore(firstHistoryDate)) start = firstHistoryDate;
     }
 
