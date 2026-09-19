@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
+import 'animal_sheet_data.dart';
 import 'gph_theme.dart';
 
 /// Exibe somente a célula correspondente ao grupo dentro da folha 5x5.
@@ -18,7 +21,9 @@ class AnimalArtwork extends StatelessWidget {
   final double borderRadius;
   final bool showGlow;
 
-  static const String _asset = 'assets/animals/cartoon_sheet.jpg';
+  static final _sheetBytes = base64Decode(
+    gphAnimalSheetBase64.replaceAll('\n', '').trim(),
+  );
   static const double _cellAspectRatio = 250 / 146;
 
   @override
@@ -61,8 +66,8 @@ class AnimalArtwork extends StatelessWidget {
                   alignment: Alignment.topLeft,
                   child: Transform.translate(
                     offset: Offset(-column * width, -row * height),
-                    child: Image.asset(
-                      _asset,
+                    child: Image.memory(
+                      _sheetBytes,
                       width: fullWidth,
                       height: fullHeight,
                       fit: BoxFit.fill,
