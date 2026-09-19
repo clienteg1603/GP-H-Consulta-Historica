@@ -21,8 +21,8 @@ class AppUpdateInfo {
 class AppUpdateService {
   AppUpdateService({http.Client? client}) : _client = client ?? http.Client();
 
-  static const int currentBuild = 18;
-  static const String currentVersion = '0.1.15 alpha 18';
+  static const int currentBuild = 20;
+  static const String currentVersion = '0.1.17 alpha 20';
   static const String manifestUrl =
       'https://raw.githubusercontent.com/clienteg1603/GP-H-Consulta-Historica/android-release/latest.json';
 
