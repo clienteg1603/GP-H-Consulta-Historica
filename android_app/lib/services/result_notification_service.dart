@@ -19,7 +19,7 @@ class ResultNotificationService {
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     );
-    await _plugin.initialize(settings: settings);
+    await _plugin.initialize(settings);
     _initialized = true;
   }
 
@@ -28,7 +28,7 @@ class ResultNotificationService {
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     if (android == null) return true;
-    return await android.requestNotificationsPermission() ?? false;
+    return await android.requestPermission() ?? false;
   }
 
   Future<void> showNewResults(List<HistoryResult> rows) async {
@@ -79,10 +79,10 @@ class ResultNotificationService {
 
     final id = _notificationId(latest);
     await _plugin.show(
-      id: id,
-      title: title,
-      body: body,
-      notificationDetails: details,
+      id,
+      title,
+      body,
+      details,
       payload: 'new-results',
     );
   }
