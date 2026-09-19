@@ -151,7 +151,8 @@ class GphTheme {
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           return TextStyle(
             color: states.contains(WidgetState.selected) ? textPrimary : textMuted,
-            fontSize: 11,
+            fontSize: 10.5,
+            height: 1.05,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w800
                 : FontWeight.w600,
@@ -198,7 +199,10 @@ class GphTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: const Color(0xFF14253A),
-        contentTextStyle: const TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+        contentTextStyle: const TextStyle(
+          color: textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       dialogTheme: DialogThemeData(
@@ -210,8 +214,31 @@ class GphTheme {
         backgroundColor: surfaceRaised,
         surfaceTintColor: Colors.transparent,
         modalBackgroundColor: surfaceRaised,
+        elevation: 0,
+        modalElevation: 0,
         showDragHandle: true,
         dragHandleColor: borderStrong,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        clipBehavior: Clip.antiAlias,
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: const Color(0xFF16283F),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: borderStrong),
+        ),
+        textStyle: const TextStyle(
+          color: textPrimary,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(borderStrong),
+        radius: const Radius.circular(8),
+        thickness: WidgetStateProperty.all(3),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: primary,
