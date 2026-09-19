@@ -57,7 +57,7 @@ class BackgroundSyncCard extends StatelessWidget {
               loading
                   ? 'Carregando configuração...'
                   : enabled
-                      ? 'O Android verifica novos resultados em segundo plano, aproximadamente a cada 15 minutos.'
+                      ? 'O Android faz a verificação periódica. Se o sorteio estiver parcial, o GP-H tenta novamente em cerca de 5 minutos.'
                       : 'Ative para o GP-H verificar resultados mesmo com o aplicativo fechado.',
               style: const TextStyle(
                 color: GphTheme.textSecondary,
@@ -90,7 +90,7 @@ class BackgroundSyncCard extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w900),
             ),
             subtitle: const Text(
-              'Quando a atualização automática encontrar prêmios novos, mostra um aviso no celular.',
+              'O aviso só é enviado quando o sorteio estiver completo, do 1º ao 5º prêmio.',
               style: TextStyle(
                 color: GphTheme.textSecondary,
                 fontSize: 11,
