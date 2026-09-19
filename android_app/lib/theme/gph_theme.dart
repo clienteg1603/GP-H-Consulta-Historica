@@ -18,6 +18,15 @@ class GphTheme {
   static const Color primary = Color(0xFF4EA1FF);
   static const Color primaryStrong = Color(0xFF1784FF);
   static const Color primarySoft = Color(0xFF173253);
+
+  /// Cores semânticas: ajudam a reconhecer o tipo de informação sem depender
+  /// apenas do texto. Devem permanecer discretas e consistentes em todo o app.
+  static const Color frequency = primary;
+  static const Color delay = Color(0xFFFFC857);
+  static const Color delaySoft = Color(0xFF332A18);
+  static const Color head = Color(0xFFA78BFA);
+  static const Color headSoft = Color(0xFF2A2142);
+
   static const Color textPrimary = Color(0xFFF4F8FD);
   static const Color textSecondary = Color(0xFFABC0D8);
   static const Color textMuted = Color(0xFF7890AA);
