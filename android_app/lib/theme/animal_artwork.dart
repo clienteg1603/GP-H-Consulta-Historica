@@ -1,14 +1,12 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
-import 'animal_sheet_data.dart';
 import 'gph_theme.dart';
 
-/// Exibe somente a célula correspondente ao grupo dentro da folha 5x5 HD.
+/// Exibe somente a célula correspondente ao grupo dentro da folha 5x5.
 ///
-/// A folha é usada em vez de 25 arquivos separados para manter o tratamento
-/// visual consistente e garantir as ilustrações disponíveis mesmo offline.
+/// A folha é carregada como asset real do Flutter. Isso evita a decodificação
+/// de uma imagem grande embutida em Base64 durante a execução e mantém as
+/// ilustrações disponíveis offline.
 class AnimalArtwork extends StatelessWidget {
   const AnimalArtwork({
     super.key,
@@ -21,9 +19,7 @@ class AnimalArtwork extends StatelessWidget {
   final double borderRadius;
   final bool showGlow;
 
-  static final _sheetBytes = base64Decode(
-    gphAnimalSheetBase64.replaceAll('\n', '').trim(),
-  );
+  static const String _sheetAsset = 'assets/animals/cartoon_sheet.jpg';
   static const double _cellAspectRatio = 250 / 146;
 
   @override
@@ -66,14 +62,22 @@ class AnimalArtwork extends StatelessWidget {
                   alignment: Alignment.topLeft,
                   child: Transform.translate(
                     offset: Offset(-column * width, -row * height),
-                    child: Image.memory(
-                      _sheetBytes,
+                    child: Image.asset(
+                      _sheetAsset,
                       width: fullWidth,
                       height: fullHeight,
                       fit: BoxFit.fill,
                       alignment: Alignment.topLeft,
                       filterQuality: FilterQuality.high,
                       gaplessPlayback: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return ColoredBox(
+                          color: GphTheme.surfaceSoft,
+                          child: const Center(
+                            child: Icon(Icons.pets_outlined),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
