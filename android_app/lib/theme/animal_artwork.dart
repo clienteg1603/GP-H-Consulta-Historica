@@ -59,7 +59,7 @@ class AnimalArtwork extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final shortest = constraints.biggest.shortestSide;
-          final fontSize = shortest.clamp(46.0, 94.0);
+          final fontSize = shortest.clamp(46.0, 94.0).toDouble();
 
           return DecoratedBox(
             decoration: BoxDecoration(
