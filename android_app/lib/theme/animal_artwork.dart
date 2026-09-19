@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'animal_sheet_data.dart';
 import 'gph_theme.dart';
 
-/// Exibe somente a célula correspondente ao grupo dentro da folha 5x5.
+/// Exibe somente a célula correspondente ao grupo dentro da folha 5x5 HD.
 ///
-/// A folha é usada em vez de 25 arquivos separados para manter o APK leve e
-/// garantir que todos os bichos tenham exatamente o mesmo tratamento visual.
+/// A folha é usada em vez de 25 arquivos separados para manter o tratamento
+/// visual consistente e garantir as ilustrações disponíveis mesmo offline.
 class AnimalArtwork extends StatelessWidget {
   const AnimalArtwork({
     super.key,
@@ -72,7 +72,7 @@ class AnimalArtwork extends StatelessWidget {
                       height: fullHeight,
                       fit: BoxFit.fill,
                       alignment: Alignment.topLeft,
-                      filterQuality: FilterQuality.medium,
+                      filterQuality: FilterQuality.high,
                       gaplessPlayback: true,
                     ),
                   ),
