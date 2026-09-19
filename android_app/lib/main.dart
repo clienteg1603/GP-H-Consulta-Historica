@@ -5,7 +5,7 @@ import 'screens/games_screen.dart';
 import 'screens/home_visual_screen.dart';
 import 'screens/numbers_hub_screen.dart';
 import 'screens/search_screen.dart';
-import 'screens/stats_screen.dart';
+import 'screens/stats_visual_screen.dart';
 import 'services/app_update_service.dart';
 import 'theme/gph_theme.dart';
 
@@ -43,7 +43,7 @@ class _GphShellState extends State<GphShell> {
     HomeVisualScreen(),
     GamesScreen(),
     SearchScreen(),
-    StatsScreen(),
+    StatsVisualScreen(),
     NumbersHubScreen(),
   ];
 
