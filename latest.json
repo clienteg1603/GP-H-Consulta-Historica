@@ -1,7 +1,7 @@
 {
   "version": "0.1.19",
   "build": 22,
-  "url": "https://raw.githubusercontent.com/clienteg1603/GP-H-Consulta-Historica/android-release/GP-H_Consulta_Historica_Android.apk",
+  "url": "https://github.com/clienteg1603/GP-H-Consulta-Historica/releases/download/android-alpha-22/GP-H_Consulta_Historica_Android.apk",
   "notes": "Alpha 22: corrige a atualização automática para nunca salvar ou notificar um sorteio parcial. Agora o GP-H só grava um horário quando os cinco prêmios, do 1º ao 5º, estiverem presentes. Se a fonte publicar apenas parte do resultado, o aplicativo aguarda e agenda uma nova tentativa em cerca de 5 minutos; o Android ainda pode atrasar essa execução por políticas de bateria e segundo plano. A verificação periódica de segurança continua respeitando o limite do WorkManager do Android. A notificação só é enviada depois que o sorteio estiver completo. Também adiciona testes para impedir regressão desse comportamento. Nenhuma regra de cálculo, ranking ou histórico já consolidado foi alterada. Pode ser instalada por cima da Alpha 21 sem apagar a base local.",
   "sha256": "c6488ff3af7f8b0f2c46d0c203c99bf7399684725320d06c377c280fcb0abb61",
   "size": 19463044
