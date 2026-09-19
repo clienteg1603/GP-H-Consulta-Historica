@@ -8,6 +8,8 @@ import 'result_notification_service.dart';
 
 const String backgroundHistoryTask = 'gph.background.history.sync';
 const String backgroundHistoryUniqueWork = 'gph-background-history-sync';
+const String backgroundHistoryRetryUniqueWork =
+    'gph-background-history-partial-retry';
 
 const String _keyEnabled = 'background_sync_enabled';
 const String _keyNotifications = 'background_sync_notifications';
@@ -75,7 +77,10 @@ class BackgroundSyncService {
       await _repository.saveSetting(_keyLastError, null);
       await _schedule();
     } else {
-      await Workmanager().cancelByUniqueName(backgroundHistoryUniqueWork);
+      await Future.wait([
+        Workmanager().cancelByUniqueName(backgroundHistoryUniqueWork),
+        Workmanager().cancelByUniqueName(backgroundHistoryRetryUniqueWork),
+      ]);
     }
   }
 
@@ -89,11 +94,7 @@ class BackgroundSyncService {
       backgroundHistoryTask,
       frequency: const Duration(minutes: 15),
       existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-        requiresBatteryNotLow: true,
-        requiresStorageNotLow: true,
-      ),
+      constraints: _backgroundConstraints(),
     );
   }
 
@@ -136,6 +137,10 @@ Future<bool> performBackgroundHistoryCheck() async {
     final after = await _recentRows(repository);
     final newRows = detectNewHistoryRows(before, after);
 
+    if (result.incompleteDraws > 0) {
+      await schedulePartialResultRetry();
+    }
+
     final notifications = await repository.boolSetting(_keyNotifications);
     if (notifications && newRows.isNotEmpty) {
       final notificationService = ResultNotificationService();
@@ -165,6 +170,22 @@ Future<bool> performBackgroundHistoryCheck() async {
     return false;
   }
 }
+
+Future<void> schedulePartialResultRetry() {
+  return Workmanager().registerOneOffTask(
+    backgroundHistoryRetryUniqueWork,
+    backgroundHistoryTask,
+    initialDelay: const Duration(minutes: 5),
+    existingWorkPolicy: ExistingWorkPolicy.replace,
+    constraints: _backgroundConstraints(),
+  );
+}
+
+Constraints _backgroundConstraints() => Constraints(
+      networkType: NetworkType.connected,
+      requiresBatteryNotLow: true,
+      requiresStorageNotLow: true,
+    );
 
 Future<List<HistoryResult>> _recentRows(HistoryRepository repository) async {
   final now = DateTime.now();

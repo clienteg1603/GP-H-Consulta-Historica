@@ -32,6 +32,7 @@ class SyncResult {
     required this.pagesWithoutResults,
     required this.errors,
     required this.initialLoad,
+    this.incompleteDraws = 0,
   });
 
   final DateTime start;
@@ -40,6 +41,7 @@ class SyncResult {
   final int pagesWithoutResults;
   final List<String> errors;
   final bool initialLoad;
+  final int incompleteDraws;
 }
 
 class HistorySyncService {
@@ -87,15 +89,18 @@ class HistorySyncService {
     final total = today.difference(start).inDays + 1;
     var saved = 0;
     var noResults = 0;
+    var incompleteDraws = 0;
     final errors = <String>[];
 
     for (var index = 0; index < total; index++) {
       final day = start.add(Duration(days: index));
       try {
-        final rows = await fetchDay(day);
+        final fetchedRows = await fetchDay(day);
+        incompleteDraws += incompleteDrawCount(fetchedRows);
+        final rows = completeDrawsOnly(fetchedRows);
         if (rows.isNotEmpty) {
           saved += await _repository.save(rows);
-        } else {
+        } else if (fetchedRows.isEmpty) {
           noResults++;
         }
         if (firstLoad) {
@@ -136,6 +141,7 @@ class HistorySyncService {
       pagesWithoutResults: noResults,
       errors: errors,
       initialLoad: firstLoad,
+      incompleteDraws: incompleteDraws,
     );
   }
 
@@ -162,6 +168,35 @@ class HistorySyncService {
     }
 
     return parseDailyHtml(response.body, day, url);
+  }
+
+  static List<HistoryResult> completeDrawsOnly(
+    Iterable<HistoryResult> rows,
+  ) {
+    final grouped = <String, List<HistoryResult>>{};
+    for (final row in rows) {
+      grouped.putIfAbsent(_drawKey(row), () => <HistoryResult>[]).add(row);
+    }
+
+    final complete = <HistoryResult>[];
+    for (final drawRows in grouped.values) {
+      final prizes = drawRows.map((row) => row.prize).toSet();
+      final isComplete = const {1, 2, 3, 4, 5}.every(prizes.contains);
+      if (isComplete) complete.addAll(drawRows);
+    }
+
+    complete.sort(_compareRows);
+    return complete;
+  }
+
+  static int incompleteDrawCount(Iterable<HistoryResult> rows) {
+    final grouped = <String, Set<int>>{};
+    for (final row in rows) {
+      grouped.putIfAbsent(_drawKey(row), () => <int>{}).add(row.prize);
+    }
+    return grouped.values.where((prizes) {
+      return !const {1, 2, 3, 4, 5}.every(prizes.contains);
+    }).length;
   }
 
   static List<HistoryResult> parseDailyHtml(String rawHtml, DateTime day, String source) {
@@ -265,6 +300,19 @@ class HistorySyncService {
     ];
     return names[value.weekday - 1];
   }
+
+  static int _compareRows(HistoryResult a, HistoryResult b) {
+    final byDate = a.date.compareTo(b.date);
+    if (byDate != 0) return byDate;
+    final byTime = a.time.compareTo(b.time);
+    if (byTime != 0) return byTime;
+    final byDraw = a.draw.compareTo(b.draw);
+    if (byDraw != 0) return byDraw;
+    return a.prize.compareTo(b.prize);
+  }
+
+  static String _drawKey(HistoryResult row) =>
+      '${row.date}|${row.draw}|${row.time}';
 
   static DateTime _dateOnly(DateTime value) => DateTime(value.year, value.month, value.day);
 
