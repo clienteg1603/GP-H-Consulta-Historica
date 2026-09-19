@@ -30,6 +30,7 @@ class HomeSyncCard extends StatelessWidget {
     required this.syncing,
     required this.progress,
     required this.message,
+    required this.messageIsError,
     required this.onSync,
   });
 
@@ -37,6 +38,7 @@ class HomeSyncCard extends StatelessWidget {
   final bool syncing;
   final SyncProgress? progress;
   final String? message;
+  final bool messageIsError;
   final VoidCallback onSync;
 
   @override
@@ -95,6 +97,11 @@ class HomeSyncCard extends StatelessWidget {
       label: Text(empty ? 'Preparar histórico' : 'Atualizar histórico'),
     );
 
+    final messageColor = messageIsError ? GphTheme.danger : GphTheme.success;
+    final messageIcon = messageIsError
+        ? Icons.error_outline_rounded
+        : Icons.check_circle_outline_rounded;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -150,12 +157,12 @@ class HomeSyncCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.check_circle_outline_rounded, size: 16, color: GphTheme.success),
+                Icon(messageIcon, size: 16, color: messageColor),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     message!,
-                    style: const TextStyle(color: GphTheme.success, fontSize: 11, height: 1.3),
+                    style: TextStyle(color: messageColor, fontSize: 11, height: 1.3),
                   ),
                 ),
               ],
@@ -281,7 +288,8 @@ class DelayStrip extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = (constraints.maxWidth - 8) / 2;
+        final singleColumn = constraints.maxWidth < 340;
+        final width = singleColumn ? constraints.maxWidth : (constraints.maxWidth - 8) / 2;
         return Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -351,9 +359,16 @@ class DelayStrip extends StatelessWidget {
 }
 
 class HomeInfoCard extends StatelessWidget {
-  const HomeInfoCard({super.key, required this.text});
+  const HomeInfoCard({
+    super.key,
+    required this.text,
+    this.icon = Icons.info_outline_rounded,
+    this.accent = GphTheme.textMuted,
+  });
 
   final String text;
+  final IconData icon;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -365,8 +380,9 @@ class HomeInfoCard extends StatelessWidget {
           border: Border.all(color: GphTheme.border),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.info_outline_rounded, size: 19, color: GphTheme.textMuted),
+            Icon(icon, size: 19, color: accent),
             const SizedBox(width: 9),
             Expanded(
               child: Text(
