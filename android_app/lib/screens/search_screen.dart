@@ -161,26 +161,18 @@ class _SearchScreenState extends State<SearchScreen> {
           style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
         ),
         const SizedBox(height: 9),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: modes.map((mode) {
-              final selected = _mode == mode;
-              return Padding(
-                padding: const EdgeInsets.only(right: 7),
-                child: ChoiceChip(
-                  avatar: Icon(
-                    _iconForMode(mode),
-                    size: 16,
-                    color: selected ? GphTheme.primary : GphTheme.textMuted,
-                  ),
-                  label: Text(mode),
-                  selected: selected,
-                  onSelected: (_) => _changeMode(mode),
-                ),
-              );
-            }).toList(),
-          ),
+        Wrap(
+          spacing: 7,
+          runSpacing: 7,
+          children: modes.map((mode) {
+            final selected = _mode == mode;
+            return _ModeChoice(
+              label: mode,
+              icon: _iconForMode(mode),
+              selected: selected,
+              onTap: () => _changeMode(mode),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 15),
         if (_mode == 'Bicho')
@@ -228,6 +220,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             children: [
                               Text(
                                 '${animal.group.toString().padLeft(2, '0')} • ${animal.name}',
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontWeight: FontWeight.w800),
                               ),
                               Text(
@@ -256,12 +249,33 @@ class _SearchScreenState extends State<SearchScreen> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textInputAction: TextInputAction.search,
+            onChanged: (_) {
+              if (_error != null || _results != null) {
+                setState(() {
+                  _error = null;
+                  _results = null;
+                });
+              }
+            },
             onSubmitted: (_) => _search(),
             decoration: InputDecoration(
               labelText: 'Pesquisar por $_mode',
               hintText: _hintForMode(_mode),
               prefixIcon: Icon(_iconForMode(_mode)),
               counterText: '',
+              suffixIcon: _queryController.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Limpar número',
+                      onPressed: () {
+                        setState(() {
+                          _queryController.clear();
+                          _results = null;
+                          _error = null;
+                        });
+                      },
+                      icon: const Icon(Icons.close_rounded),
+                    ),
             ),
             maxLength: _maxLengthForMode(_mode),
           ),
@@ -375,6 +389,53 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
+class _ModeChoice extends StatelessWidget {
+  const _ModeChoice({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: selected ? GphTheme.primarySoft : GphTheme.surfaceRaised,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: selected ? GphTheme.primary : GphTheme.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: selected ? GphTheme.primary : GphTheme.textMuted),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? GphTheme.textPrimary : GphTheme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
 class _HeaderIcon extends StatelessWidget {
   const _HeaderIcon();
 
@@ -416,6 +477,8 @@ class _AnimalSelectionCard extends StatelessWidget {
                 children: [
                   Text(
                     animal.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
                   ),
                   const SizedBox(height: 2),
@@ -458,6 +521,52 @@ class _FilterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final prizeField = DropdownButtonFormField<int>(
+      key: ValueKey('prize-$prize'),
+      initialValue: prize,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Prêmio',
+        prefixIcon: Icon(Icons.emoji_events_outlined),
+      ),
+      items: const [
+        DropdownMenuItem<int>(value: null, child: Text('Todos')),
+        DropdownMenuItem(value: 1, child: Text('1º prêmio')),
+        DropdownMenuItem(value: 2, child: Text('2º prêmio')),
+        DropdownMenuItem(value: 3, child: Text('3º prêmio')),
+        DropdownMenuItem(value: 4, child: Text('4º prêmio')),
+        DropdownMenuItem(value: 5, child: Text('5º prêmio')),
+      ],
+      onChanged: onPrizeChanged,
+    );
+
+    final drawField = FutureBuilder<List<String>>(
+      future: drawOptions,
+      builder: (context, snapshot) {
+        final options = snapshot.data ?? const <String>[];
+        final selected = draw != null && options.contains(draw) ? draw : null;
+        return DropdownButtonFormField<String>(
+          key: ValueKey('draw-${draw ?? ''}'),
+          initialValue: selected,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Sorteio',
+            prefixIcon: Icon(Icons.schedule_rounded),
+          ),
+          items: [
+            const DropdownMenuItem<String>(value: '', child: Text('Todos')),
+            ...options.map(
+              (value) => DropdownMenuItem<String>(
+                value: value,
+                child: Text(value, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          ],
+          onChanged: (value) => onDrawChanged(value == null || value.isEmpty ? null : value),
+        );
+      },
+    );
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -497,62 +606,25 @@ class _FilterCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 11),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  key: ValueKey('prize-$prize'),
-                  initialValue: prize,
-                  decoration: const InputDecoration(
-                    labelText: 'Prêmio',
-                    prefixIcon: Icon(Icons.emoji_events_outlined),
-                  ),
-                  items: const [
-                    DropdownMenuItem<int>(value: null, child: Text('Todos')),
-                    DropdownMenuItem(value: 1, child: Text('1º prêmio')),
-                    DropdownMenuItem(value: 2, child: Text('2º prêmio')),
-                    DropdownMenuItem(value: 3, child: Text('3º prêmio')),
-                    DropdownMenuItem(value: 4, child: Text('4º prêmio')),
-                    DropdownMenuItem(value: 5, child: Text('5º prêmio')),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 410) {
+                return Column(
+                  children: [
+                    prizeField,
+                    const SizedBox(height: 10),
+                    drawField,
                   ],
-                  onChanged: onPrizeChanged,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FutureBuilder<List<String>>(
-                  future: drawOptions,
-                  builder: (context, snapshot) {
-                    final options = snapshot.data ?? const <String>[];
-                    final selected = draw != null && options.contains(draw) ? draw : null;
-                    return DropdownButtonFormField<String>(
-                      key: ValueKey('draw-${draw ?? ''}'),
-                      initialValue: selected,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Sorteio',
-                        prefixIcon: Icon(Icons.schedule_rounded),
-                      ),
-                      items: [
-                        const DropdownMenuItem<String>(
-                          value: '',
-                          child: Text('Todos'),
-                        ),
-                        ...options.map(
-                          (value) => DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value, overflow: TextOverflow.ellipsis),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) => onDrawChanged(
-                        value == null || value.isEmpty ? null : value,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: prizeField),
+                  const SizedBox(width: 10),
+                  Expanded(child: drawField),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 10),
           SizedBox(
@@ -560,7 +632,7 @@ class _FilterCard extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onPickPeriod,
               icon: Icon(hasPeriod ? Icons.event_available_rounded : Icons.date_range_rounded),
-              label: Text(periodLabel),
+              label: Text(periodLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ),
         ],
@@ -590,6 +662,7 @@ class _ResultsPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 34,
@@ -608,9 +681,16 @@ class _ResultsPanel extends StatelessWidget {
               ),
             ),
             if (rows.length >= 250)
-              const Text(
-                'limite 250',
-                style: TextStyle(color: GphTheme.textMuted, fontSize: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: GphTheme.surfaceRaised,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'limite 250',
+                  style: TextStyle(color: GphTheme.textMuted, fontSize: 10),
+                ),
               ),
           ],
         ),
@@ -662,20 +742,22 @@ class _ResultDrawCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 5,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(
-                _date(first.date),
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(width: 8),
+              Text(_date(first.date), style: const TextStyle(fontWeight: FontWeight.w900)),
               Text(first.time, style: const TextStyle(color: GphTheme.textSecondary)),
-              const Spacer(),
-              Flexible(
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: GphTheme.primarySoft,
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: Text(
                   first.draw,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: GphTheme.primary, fontWeight: FontWeight.w800),
+                  style: const TextStyle(color: GphTheme.primary, fontSize: 10, fontWeight: FontWeight.w800),
                 ),
               ),
             ],
@@ -684,7 +766,7 @@ class _ResultDrawCard extends StatelessWidget {
           ...ordered.map(
             (row) => Container(
               margin: const EdgeInsets.only(bottom: 5),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               decoration: BoxDecoration(
                 color: GphTheme.surface,
                 borderRadius: BorderRadius.circular(10),
@@ -700,7 +782,7 @@ class _ResultDrawCard extends StatelessWidget {
                     child: Text(row.thousand, style: const TextStyle(fontWeight: FontWeight.w900)),
                   ),
                   Expanded(
-                    child: Text(row.animal, overflow: TextOverflow.ellipsis),
+                    child: Text(row.animal, maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
