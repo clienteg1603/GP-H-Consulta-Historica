@@ -72,7 +72,6 @@ class ResultNotificationService {
         channelDescription: channelDescription,
         importance: Importance.high,
         priority: Priority.high,
-        category: AndroidNotificationCategory.status,
         styleInformation: BigTextStyleInformation(body),
       ),
     );
