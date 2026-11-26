@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: actions-storage-${{ github.workflow }}-${{ github.ref }}
+  group: actions-storage-maintenance
   cancel-in-progress: false
 
 jobs:
