@@ -176,3 +176,5 @@ jobs:
           name: GP-H_Consulta_Historica_Android_release
           path: /tmp/GP-H_Consulta_Historica_Android.apk
           if-no-files-found: error
+          retention-days: 1
+

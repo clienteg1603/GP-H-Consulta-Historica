@@ -8,7 +8,7 @@ on:
       - completed
 
 permissions:
-  actions: read
+  actions: write
   contents: write
 
 jobs:
@@ -109,3 +109,28 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Android release: usa download do GitHub Release"
           git push origin HEAD:android-release
+
+
+      - name: Remove temporary APK only after publication is verified
+        continue-on-error: true
+        uses: actions/github-script@v9
+        env:
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+        with:
+          script: |
+            const scope = {...context.repo};
+            const {data:release} = await github.rest.repos.getReleaseByTag({...scope, tag:process.env.GPH_TAG});
+            const asset = release.assets.find(a => a.name === process.env.GPH_APK_NAME && a.state === 'uploaded');
+            const apk = require('fs').readFileSync('/tmp/gph-release/' + process.env.GPH_APK_NAME);
+            const digest = 'sha256:' + require('crypto').createHash('sha256').update(apk).digest('hex');
+            if (release.draft || !asset || asset.size !== apk.length || asset.digest !== digest) {
+              throw new Error('Published APK does not match; transfer artifact preserved');
+            }
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              ...scope, run_id:Number(process.env.SOURCE_RUN_ID), per_page:100
+            });
+            for (const artifact of artifacts) {
+              if (artifact.name !== 'GP-H_Consulta_Historica_Android_release') continue;
+              await github.rest.actions.deleteArtifact({...scope, artifact_id:artifact.id});
+              core.info('Removed temporary APK artifact ' + artifact.id + ' after Release verification');
+            }
