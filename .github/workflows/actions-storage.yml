@@ -1,0 +1,45 @@
+name: Actions storage maintenance
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/actions-storage.yml
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: actions-storage-maintenance
+  cancel-in-progress: false
+
+jobs:
+  storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Inventory artifacts and rebuildable caches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const scope = {...context.repo};
+            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, {...scope, per_page: 100});
+            const caches = await github.paginate(github.rest.actions.getActionsCacheList, {...scope, per_page: 100});
+            const runIds = [...new Set(artifacts.map(a => a.workflow_run?.id).filter(Boolean))];
+            const runs = [];
+            for (const run_id of runIds) {
+              const {data:r} = await github.rest.actions.getWorkflowRun({...scope, run_id});
+              runs.push({id:r.id,name:r.name,path:r.path,status:r.status,conclusion:r.conclusion,head_sha:r.head_sha,created_at:r.created_at});
+            }
+            let retention;
+            try {retention = (await github.request('GET /repos/{owner}/{repo}/actions/permissions/artifact-and-log-retention', scope)).data;}
+            catch(e) {retention = {unavailable: e.status};}
+            const inventory = {repo:process.env.GITHUB_REPOSITORY,at:new Date().toISOString(),artifacts,caches,runs,retention};
+            console.log('STORAGE_AUDIT_JSON=' + JSON.stringify(inventory));
+            await core.summary.addHeading('Actions storage inventory').addTable([
+              [{data:'Kind',header:true},{data:'Count',header:true},{data:'Bytes',header:true}],
+              ['Artifacts',String(artifacts.length),String(artifacts.reduce((n,a)=>n+a.size_in_bytes,0))],
+              ['Caches',String(caches.length),String(caches.reduce((n,a)=>n+a.size_in_bytes,0))]
+            ]).write();
